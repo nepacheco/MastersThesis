@@ -13,10 +13,10 @@ mu = 0.2; % coefficient of friction for capstan
 % Determining the necessary pullwire force to have all notches closed at
 % 30° with a 5 notch tube. Assume that the depth for the most distal notch
 % is 90% of the outer diameter.
-anglePerNotch = 18*pi/180; % [rad] - maximum angle per notch
+anglePerNotch = 20*pi/180; % [rad] - maximum angle per notch
 maxG = 0.9*od; %[mm]
 [maxYbar, minI] = GetNeutralAxis(od/2, id/2, maxG);
-Fclosed = anglePerNotch*E*minI/(h*(od/2 + maxYbar)*exp(-mu*n*anglePerNotch));
+Fclosed = anglePerNotch*E*minI/(h*(id/2 + maxYbar)*exp(-mu*n*anglePerNotch));
 
 % initialize gradient descent
 g_vec = zeros(1,5);
@@ -28,7 +28,7 @@ for i = 1:5
     Fpw = 0;
     while(abs(error) > 1E-9)
         [ybar, I] = GetNeutralAxis(od/2, id/2, g);
-        Fpw = anglePerNotch*E*I/(h*(od/2 + ybar)*exp(-mu*i*anglePerNotch));
+        Fpw = anglePerNotch*E*I/(h*(id/2 + ybar)*exp(-mu*i*anglePerNotch));
         error = Fpw - Fclosed;
         g = g + stepsize*error;
         steps = steps + 1;
@@ -61,11 +61,12 @@ theta = (sheath.theta.*180/pi)'
 
 
 %% Tip First Bending but incorporating different elastic modulus per notch
-anglePerNotch = 25*pi/180; % [rad] - maximum angle per notch
+clc;
+anglePerNotch = 20*pi/180; % [rad] - maximum angle per notch
 maxG = 9.9E-4; %[mm]
 [maxYbar, minI] = GetNeutralAxis(od/2, id/2, maxG);
 [stress, strain, E] = GetStrainInformation(anglePerNotch, h, od/2, maxG, maxYbar);
-Fclosed = anglePerNotch*E*minI/(h*(od/2 + maxYbar)*exp(-mu*n*anglePerNotch));
+Fclosed = anglePerNotch*E*minI/(h*(id/2 + maxYbar)*exp(-mu*n*anglePerNotch));
 
 % initialize gradient descent
 g_vec = zeros(1,5);
@@ -82,7 +83,7 @@ for i = 1:5
     while(abs(error) > 1E-9)
         [ybar, I] = GetNeutralAxis(od/2, id/2, g);
         [stress, strain, E] = GetStrainInformation(anglePerNotch, h, od/2, g, ybar);
-        Fpw = anglePerNotch*E*I/(h*(od/2 + ybar)*exp(-mu*i*anglePerNotch));
+        Fpw = anglePerNotch*E*I/(h*(id/2 + ybar)*exp(-mu*i*anglePerNotch));
         error = Fpw - Fclosed;
         g = g + stepsize*error;
         steps = steps + 1;
@@ -116,15 +117,45 @@ FOS = 1;                % Factor of Safety
 
 % Create instance of wrist object
 sheath = Wrist();
-sheath.ConstructWrist('T_0',T_0,'g',g,'c',c,'b',b,'h',h_w,'h_c',h_c,'r_o',r_o,'r_i',r_i,'n',N,'material','nitinol','plotkin',true);
+sheath.ConstructWrist('T_0',T_0,'g',g,'c',c,'b',b,'h',h_w,'h_c',h_c,'r_o',r_o,'r_i',r_i,'n',N,'material','nitinol','plotkin',false);
 sheath.GetKinematicsForce(Fclosed);
 
 theta_exp = anglePerNotch*ones(1,5);
 
-ratio_exp = theta_exp.*E_exp.*exp(mu.*[1 2 3 4 5].*theta_exp)
-ratio_exp_F = Fclosed.*(od/2 + ybar_exp).*h./I_exp
-ratio_act = (sheath.theta').*sheath.E_eff.*exp(mu.*[1 2 3 4 5].*(sheath.theta'))
-ratio_act_F = Fclosed.*(sheath.r_o + sheath.ybar).*sheath.h./sheath.J
+ratio_exp = theta_exp.*E_exp.*exp(mu.*(theta_exp*triu(ones(5,5))));
+ratio_exp_F = Fclosed.*(id/2 + ybar_exp).*h./I_exp;
+ratio_act = (sheath.theta').*sheath.E_eff.*exp(mu.*((sheath.theta')*triu(ones(5,5))));
+ratio_act_F = Fclosed.*(sheath.r_i + sheath.ybar).*sheath.h./sheath.J;
+ratio_act./ratio_exp;
+
+percentage_error = sheath.theta./(theta_exp');
+s = sprintf("");
+for i = 1:5
+    s = s + sprintf("Percentage error for notch %u, %f\n",i,percentage_error(i));
+end
+disp(s)
+
+% **** PLOTTING NOTCH ANGLE WRT FORCE **********
+sheath.FindMaxForce(1,5);
+points = 100;
+theta_mat = zeros(n,points);
+F = linspace(0,sheath.F_max,points);
+for i = 1:points
+    sheath.GetKinematicsForce(F(i));
+    theta_mat(:,i) = sheath.theta;
+end
+theta_mat = theta_mat.*(180/pi); % Convert to deg
+figure();
+plot(F,theta_mat);
+title("Notch angles with respect to force applied at Tendon Using Josh's Model")
+xlabel("Force (N)")
+ylabel("Angle (rad)")
+label = sprintf("Angle: %.2f\nForce: %.2f",anglePerNotch*180/pi,Fclosed);
+hold on
+plot(Fclosed,anglePerNotch*180/pi,'ok','MarkerSize',12)
+text(Fclosed,anglePerNotch*180/pi,label,'VerticalAlignment','bottom',...
+    'HorizontalAlignment','right');
+legend("theta1","theta2","theta3","theta4","theta5")
 %% Graphing Fclosed
 anglePerNotch = 0.4;
 maxG = 9.9E-4; %[mm]
