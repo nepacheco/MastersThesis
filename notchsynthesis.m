@@ -5,15 +5,15 @@ clear, close all, clc
 L = 15e-3; %[m]
 
 % Define the desired maximum bending angle for the wrist
-thetaMax = 90 * pi / 180; % [radians]
+thetaMax = 150 * pi / 180; % [radians]
 
 % Define the number of notches
-n = 3;
+n = 5;
 
 % Tube diameters
-OD = 1.1 * 10^-3; % [m] tube outer diameter
-ID = 0.9 * 10^-3; % [m] tube inner diameter
-w = 0.85*OD; % [m]
+OD = 1.1 * 10^-3; % [m] tube outer diameter 1.4706
+ID = 0.9 * 10^-3; % [m] tube inner diameter 1.2903
+w = 0.70*OD; % [m]
 
 %% You should not need to change anything from the code below
 

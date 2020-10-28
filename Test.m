@@ -13,7 +13,7 @@ r_i = 0.86E-3/2;         % Tube Inner Radius [m]
 h = linspace(0.51E-3,0.51E-3,N);    % Notch Width Vector [m]
 h_c = linspace(.51E-3,.51E-3,N);    % Notch Collision Width Vector (<h) [m]
 g = linspace(0.97E-3,0.97E-3,N);     % Notch depth vector [m]
-c = (.4E-3).*ones(N,1);             % Notch spacing vector [m]
+c = (.51E-3).*ones(N,1);             % Notch spacing vector [m]
 b = 1.5E-3;             % Distal offset [m]
 FOS = 1;                % Factor of Safety
 

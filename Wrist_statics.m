@@ -13,8 +13,8 @@ w = 0.935e-3;
 ro = 1.1e-3/2;   %outer radius of tube in [m].
 ri = 0.9e-3/2;   %inner radius of tube in [m].
 d = w-ro;         %intermediate variable. Depth of cut as measured from y = 0. See Figure 4.
-h = 0.16e-3;
-n = 10;            %number of cuts
+h = 0.44247e-3;
+n = 5;            %number of cuts
 
 
 %% Calculations
