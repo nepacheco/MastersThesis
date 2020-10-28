@@ -62,13 +62,14 @@ theta = (sheath.theta.*180/pi)'
 
 %% Tip First Bending but incorporating different elastic modulus per notch
 clc;
-anglePerNotch = 20*pi/180; % [rad] - maximum angle per notch
+anglePerNotch = 15*pi/180; % [rad] - maximum angle per notch
 maxG = 9.9E-4; %[mm]
 [maxYbar, minI] = GetNeutralAxis(od/2, id/2, maxG);
 [stress, strain, E] = GetStrainInformation(anglePerNotch, h, od/2, maxG, maxYbar);
-Fclosed = anglePerNotch*E*minI/(h*(id/2 + maxYbar)*exp(-mu*n*anglePerNotch));
+theta_des = anglePerNotch.*ones(1,5);
+Fclosed = anglePerNotch*E*minI/(h*(id/2 + maxYbar)*exp(-mu*sum(theta_des)));
 
-% initialize gradient descent
+% initialize gradient descent To determine cut depth
 g_vec = zeros(1,5);
 E_exp = zeros(1,5);
 ybar_exp = zeros(1,5);
@@ -83,7 +84,7 @@ for i = 1:5
     while(abs(error) > 1E-9)
         [ybar, I] = GetNeutralAxis(od/2, id/2, g);
         [stress, strain, E] = GetStrainInformation(anglePerNotch, h, od/2, g, ybar);
-        Fpw = anglePerNotch*E*I/(h*(id/2 + ybar)*exp(-mu*i*anglePerNotch));
+        Fpw = anglePerNotch*E*I/(h*(id/2 + ybar)*exp(-mu*sum(theta_des(1:i))));
         error = Fpw - Fclosed;
         g = g + stepsize*error;
         steps = steps + 1;
@@ -93,6 +94,7 @@ for i = 1:5
         I_exp(i) = I;
         stress_exp(i) = stress;
         strain_exp(i) = strain;
+        % **************************
         if (steps >= 800)
             disp("max steps reached")
             disp(error);
@@ -120,14 +122,8 @@ sheath = Wrist();
 sheath.ConstructWrist('T_0',T_0,'g',g,'c',c,'b',b,'h',h_w,'h_c',h_c,'r_o',r_o,'r_i',r_i,'n',N,'material','nitinol','plotkin',false);
 sheath.GetKinematicsForce(Fclosed);
 
+% Print out percentage error for each notch
 theta_exp = anglePerNotch*ones(1,5);
-
-ratio_exp = theta_exp.*E_exp.*exp(mu.*(theta_exp*triu(ones(5,5))));
-ratio_exp_F = Fclosed.*(id/2 + ybar_exp).*h./I_exp;
-ratio_act = (sheath.theta').*sheath.E_eff.*exp(mu.*((sheath.theta')*triu(ones(5,5))));
-ratio_act_F = Fclosed.*(sheath.r_i + sheath.ybar).*sheath.h./sheath.J;
-ratio_act./ratio_exp;
-
 percentage_error = sheath.theta./(theta_exp');
 s = sprintf("");
 for i = 1:5
@@ -155,7 +151,7 @@ hold on
 plot(Fclosed,anglePerNotch*180/pi,'ok','MarkerSize',12)
 text(Fclosed,anglePerNotch*180/pi,label,'VerticalAlignment','bottom',...
     'HorizontalAlignment','right');
-legend("theta1","theta2","theta3","theta4","theta5")
+legend("theta1 (most proximal)","theta2","theta3","theta4","theta5 (most distal)")
 %% Graphing Fclosed
 anglePerNotch = 0.4;
 maxG = 9.9E-4; %[mm]
