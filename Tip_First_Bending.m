@@ -62,12 +62,12 @@ theta = (sheath.theta.*180/pi)'
 
 %% Tip First Bending but incorporating different elastic modulus per notch
 clc;
-anglePerNotch = 15*pi/180; % [rad] - maximum angle per notch
+anglePerNotch = 20*pi/180; % [rad] - maximum angle per notch
 maxG = 9.9E-4; %[mm]
 [maxYbar, minI] = GetNeutralAxis(od/2, id/2, maxG);
-[stress, strain, E] = GetStrainInformation(anglePerNotch, h, od/2, maxG, maxYbar);
-theta_des = anglePerNotch.*ones(1,5);
-Fclosed = anglePerNotch*E*minI/(h*(id/2 + maxYbar)*exp(-mu*sum(theta_des)));
+theta_des = [16 17 18 19 20].*pi/180;
+[stress, strain, E] = GetStrainInformation(theta_des(5), h, od/2, maxG, maxYbar);
+Fclosed = theta_des(5)*E*minI/(h*(id/2 + maxYbar)*exp(-mu*sum(theta_des)));
 
 % initialize gradient descent To determine cut depth
 g_vec = zeros(1,5);
@@ -83,8 +83,8 @@ for i = 1:5
     steps = 0;
     while(abs(error) > 1E-9)
         [ybar, I] = GetNeutralAxis(od/2, id/2, g);
-        [stress, strain, E] = GetStrainInformation(anglePerNotch, h, od/2, g, ybar);
-        Fpw = anglePerNotch*E*I/(h*(id/2 + ybar)*exp(-mu*sum(theta_des(1:i))));
+        [stress, strain, E] = GetStrainInformation(theta_des(i), h, od/2, g, ybar);
+        Fpw = theta_des(i)*E*I/(h*(id/2 + ybar)*exp(-mu*sum(theta_des(1:i))));
         error = Fpw - Fclosed;
         g = g + stepsize*error;
         steps = steps + 1;
@@ -123,8 +123,7 @@ sheath.ConstructWrist('T_0',T_0,'g',g,'c',c,'b',b,'h',h_w,'h_c',h_c,'r_o',r_o,'r
 sheath.GetKinematicsForce(Fclosed);
 
 % Print out percentage error for each notch
-theta_exp = anglePerNotch*ones(1,5);
-percentage_error = sheath.theta./(theta_exp');
+percentage_error = sheath.theta./(theta_des');
 s = sprintf("");
 for i = 1:5
     s = s + sprintf("Percentage error for notch %u, %f\n",i,percentage_error(i));
@@ -146,9 +145,15 @@ plot(F,theta_mat);
 title("Notch angles with respect to force applied at Tendon Using Josh's Model")
 xlabel("Force (N)")
 ylabel("Angle (rad)")
-label = sprintf("Angle: %.2f\nForce: %.2f",anglePerNotch*180/pi,Fclosed);
-hold on
-plot(Fclosed,anglePerNotch*180/pi,'ok','MarkerSize',12)
-text(Fclosed,anglePerNotch*180/pi,label,'VerticalAlignment','bottom',...
-    'HorizontalAlignment','right');
 legend("theta1 (most proximal)","theta2","theta3","theta4","theta5 (most distal)")
+% *** LABELING OUR DESIRED POINTS ***
+labels = {};
+for (i = 1:n)
+    labels(i) = cellstr(...
+        sprintf("Angle: %.2f\nForce: %.2f",theta_des(i)*180/pi,Fclosed));
+end
+hold on
+plot(Fclosed.*ones(1,5),theta_des.*180/pi,'ok','MarkerSize',12)
+text(Fclosed.*ones(1,5),theta_des.*180/pi,labels,'VerticalAlignment','bottom',...
+    'HorizontalAlignment','right');
+
