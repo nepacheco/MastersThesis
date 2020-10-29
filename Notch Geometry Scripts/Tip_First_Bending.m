@@ -65,7 +65,7 @@ clc;
 anglePerNotch = 20*pi/180; % [rad] - maximum angle per notch
 maxG = 9.9E-4; %[mm]
 [maxYbar, minI] = GetNeutralAxis(od/2, id/2, maxG);
-theta_des = [16 17 18 19 20].*pi/180;
+theta_des = [2 20 20 20 25].*pi/180;
 [stress, strain, E] = GetStrainInformation(theta_des(5), h, od/2, maxG, maxYbar);
 Fclosed = theta_des(5)*E*minI/(h*(id/2 + maxYbar)*exp(-mu*sum(theta_des)));
 
@@ -113,8 +113,8 @@ r_i = 0.9E-3/2;         % Tube Inner Radius [m]
 h_w = linspace(0.53096E-3,0.53096E-3,N);    % Notch Width Vector [m]
 h_c = linspace(0.53096E-3,0.53096E-3,N);    % Notch Collision Width Vector (<h) [m]
 g = g_vec;     % Notch depth vector [m]
-c = (.51E-3).*ones(N,1);             % Notch spacing vector [m]
-b = 1.5E-3;             % Distal offset [m]
+c = (1E-3).*ones(N,1);             % Notch spacing vector [m]
+b = 1E-3;             % Distal offset [m]
 FOS = 1;                % Factor of Safety
 
 % Create instance of wrist object
@@ -142,10 +142,9 @@ end
 theta_mat = theta_mat.*(180/pi); % Convert to deg
 figure();
 plot(F,theta_mat);
-title("Notch angles with respect to force applied at Tendon Using Josh's Model")
+title("Notch angles with respect to force applied at tendon Using Josh's Model")
 xlabel("Force (N)")
 ylabel("Angle (rad)")
-legend("theta1 (most proximal)","theta2","theta3","theta4","theta5 (most distal)")
 % *** LABELING OUR DESIRED POINTS ***
 labels = {};
 for (i = 1:n)
@@ -156,4 +155,5 @@ hold on
 plot(Fclosed.*ones(1,5),theta_des.*180/pi,'ok','MarkerSize',12)
 text(Fclosed.*ones(1,5),theta_des.*180/pi,labels,'VerticalAlignment','bottom',...
     'HorizontalAlignment','right');
-
+hold off
+legend("theta1 (most proximal)","theta2","theta3","theta4","theta5 (most distal)")
