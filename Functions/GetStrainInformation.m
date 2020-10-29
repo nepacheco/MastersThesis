@@ -1,5 +1,5 @@
 
-function [strain, stress, E] = GetStrainInformation(theta, h, ro, g, ybar)
+function [strain, stress, E] = GetStrainInformation(theta, h, ro, ybar)
 % GETSTRAININFORMATION - returns the stress, strain, and effective youngs
 % modulus for a notch
 kappa = theta/(h-theta*ybar);
