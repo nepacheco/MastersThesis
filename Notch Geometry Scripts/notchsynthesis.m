@@ -11,9 +11,9 @@ thetaMax = 150 * pi / 180; % [radians]
 n = 5;
 
 % Tube diameters
-OD = 1.1 * 10^-3; % [m] tube outer diameter 1.4706
-ID = 0.9 * 10^-3; % [m] tube inner diameter 1.2903
-w = 0.70*OD; % [m]
+OD = 1.62 * 10^-3; % [m] tube outer diameter 1.4706
+ID = 1.4 * 10^-3; % [m] tube inner diameter 1.2903
+w = 0.9*OD; % [m]
 
 %% You should not need to change anything from the code below
 
