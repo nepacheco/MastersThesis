@@ -93,7 +93,6 @@ for i = 1:points
     diff = (theta_last-theta_des') .* (sheath.theta-theta_des'); 
     for k = 1:n % check each notch individually
         if diff(k) <= 0 % We have crosed over the desired angle
-            disp(theta_last)
             % Grab the point that was closest to the desired point
             if abs(theta_last(k)-theta_des(k)) < abs(sheath.theta(k) - theta_des(k))
                 des_points(k,1) = F(i-1);
@@ -125,7 +124,7 @@ for (i = 1:n)
 end
 hold on
 stem(Fdesired.*ones(1,n),theta_des.*180/pi,'ok','MarkerSize',10)
-stem(des_points(:,1),des_points(:,2),'r','MarkerSize',5);
+stem(des_points(:,1),des_points(:,2),'.r','MarkerSize',10);
 text(Fdesired.*ones(1,n)-0.01,theta_des.*180/pi,labels,'VerticalAlignment','bottom',...
     'HorizontalAlignment','right');
 hold off
