@@ -6,7 +6,8 @@ id = 1.4E-3; % [m] - inner diameter of tube
 n = 5; % number of notches
 maxG = 0.9*od; % [m] - Max depth which we assign to notch n.
 [~,h,u] = GetNotchSynthesis(maxBendPerNotch,maxG,od,id,n);
-E_lin = 40E9; % [N/m^2] - Elastic Modulus of Nitinol
+E_lin = 60E9; % [N/m^2] - Elastic Modulus of Nitinol
+E_se = 0.08*E_lin; % [N/m^2] - Slope of Super Elastic Region for Nitinol
 mu = 0.2; % coefficient of friction for capstan
 
 
@@ -17,7 +18,7 @@ mu = 0.2; % coefficient of friction for capstan
 % Desired theta for each notch. If n changes change the size of this vector
 theta_des = [15 16 17 18 19].*pi/180;
 % Determin the approximated linear elastic modulus
-[stress, strain, E] = GetStrainInformation(theta_des(5), h, od/2, maxYbar,E_lin);
+[stress, strain, E] = GetStrainInformation(theta_des(5), h, od/2, maxYbar,E_lin,E_se);
 % Determine force necessary to achieve desired bend at specifically notch n
 Fdesired = theta_des(n)*E*minI/(h*(id/2 + maxYbar)*exp(-mu*sum(theta_des)));
 
@@ -38,7 +39,7 @@ for i = 1:n
     while(abs(error) > 1E-9)
         % Same process as up above
         [ybar, I] = GetNeutralAxis(od/2, id/2, g);
-        [stress, strain, E] = GetStrainInformation(theta_des(i), h, od/2, ybar,E_lin);
+        [stress, strain, E] = GetStrainInformation(theta_des(i), h, od/2, ybar,E_lin,E_se);
         Fpw = theta_des(i)*E*I/(h*(id/2 + ybar)*exp(-mu*sum(theta_des(1:i))));
         % Need our pullwire force to get close to our desired force
         error = Fpw - Fdesired;
@@ -75,20 +76,39 @@ FOS = 1;                % Factor of Safety
 
 % Create instance of wrist object
 sheath = Wrist();
-sheath.ConstructWrist('T_0',T_0,'g',g,'c',c,'b',b,'h',h_w,'h_c',h_c,'r_o',r_o,'r_i',r_i,'n',N,'material','nitinol','plotkin',false,'verbose',false);
+sheath.ConstructWrist('T_0',T_0,'g',g,'c',c,'b',b,'h',h_w,'h_c',h_c,...
+    'r_o',r_o,'r_i',r_i,'n',N,'material','nitinol','plotkin',false,'verbose',false);
 
 % **** PLOTTING NOTCH ANGLE WRT FORCE **********
 sheath.FindMaxForce(1,5);
-points = 100;
-theta_mat = zeros(n,points);
-F = linspace(0,sheath.F_max,points);
+des_points = zeros(n,2);
+theta_last = zeros(n,1);
+points = 100; % how many points to plot
+theta_mat = zeros(n,points); % Initializing empty array to store values
+F = linspace(0,sheath.F_max,points); % Getting list of forces (x axis values)
 for i = 1:points
-    sheath.GetKinematicsForce(F(i));
-    theta_mat(:,i) = sheath.theta;
+    sheath.GetKinematicsForce(F(i)); % Updating tube position
+    theta_mat(:,i) = sheath.theta; % Getting tube position
+    % *** DATA COLLECTION TO SEE IF WE CROSSED DESIRED ANGLE VALUE ***
+    diff = (theta_last-theta_des') .* (sheath.theta-theta_des'); 
+    for k = 1:n % check each notch individually
+        if diff(k) <= 0 % We have crosed over the desired angle
+            disp(theta_last)
+            % Grab the point that was closest to the desired point
+            if abs(theta_last(k)-theta_des(k)) < abs(sheath.theta(k) - theta_des(k))
+                des_points(k,1) = F(i-1);
+                des_points(k,2) = rad2deg(theta_last(k));
+            else
+                des_points(k,1) = F(i);
+                des_points(k,2) = rad2deg(sheath.theta(k));
+            end
+        end
+    end
+    theta_last = sheath.theta;
 end
 theta_mat = theta_mat.*(180/pi); % Convert to deg
 close all;
-figure(2);
+figure();
 plot(F,theta_mat);
 title("Notch angles with respect to force applied at tendon Using Josh's Model")
 xlabel("Force (N)")
@@ -98,13 +118,15 @@ labels = {};
 legendLables = {};
 for (i = 1:n)
     labels(i) = cellstr(...
-        sprintf("Angle: %.2f\nForce: %.2f",theta_des(i)*180/pi,Fdesired));
+        sprintf("Angle: %.1f",theta_des(i)*180/pi));
+    % Creating Legend Labels as well
     legendLabels(i) = cellstr(...
         sprintf("theta %u",i));
 end
 hold on
-plot(Fdesired.*ones(1,n),theta_des.*180/pi,'ok','MarkerSize',12)
-text(Fdesired.*ones(1,n),theta_des.*180/pi,labels,'VerticalAlignment','bottom',...
+stem(Fdesired.*ones(1,n),theta_des.*180/pi,'ok','MarkerSize',10)
+stem(des_points(:,1),des_points(:,2),'r','MarkerSize',5);
+text(Fdesired.*ones(1,n)-0.01,theta_des.*180/pi,labels,'VerticalAlignment','bottom',...
     'HorizontalAlignment','right');
 hold off
 legend(legendLabels,'Location','northwest');
