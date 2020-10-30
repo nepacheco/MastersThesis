@@ -6,7 +6,7 @@ id = 1.4E-3; % [m] - inner diameter of tube
 n = 5; % number of notches
 maxG = 0.9*od; % [m] - Max depth which we assign to notch n.
 [~,h,u] = GetNotchSynthesis(maxBendPerNotch,maxG,od,id,n);
-E_lin = 60E9; % [N/m^2] - Elastic Modulus of Nitinol
+E_lin = 40E9; % [N/m^2] - Elastic Modulus of Nitinol
 E_se = 0.08*E_lin; % [N/m^2] - Slope of Super Elastic Region for Nitinol
 mu = 0.2; % coefficient of friction for capstan
 
@@ -89,11 +89,12 @@ F = linspace(0,sheath.F_max,points); % Getting list of forces (x axis values)
 for i = 1:points
     sheath.GetKinematicsForce(F(i)); % Updating tube position
     theta_mat(:,i) = sheath.theta; % Getting tube position
+    
     % *** DATA COLLECTION TO SEE IF WE CROSSED DESIRED ANGLE VALUE ***
     diff = (theta_last-theta_des') .* (sheath.theta-theta_des'); 
     for k = 1:n % check each notch individually
         if diff(k) <= 0 % We have crosed over the desired angle
-            % Grab the point that was closest to the desired point
+            % Grab the point that was closest to the desired angle
             if abs(theta_last(k)-theta_des(k)) < abs(sheath.theta(k) - theta_des(k))
                 des_points(k,1) = F(i-1);
                 des_points(k,2) = rad2deg(theta_last(k));
@@ -104,6 +105,7 @@ for i = 1:points
         end
     end
     theta_last = sheath.theta;
+    % ****************************************************************
 end
 theta_mat = theta_mat.*(180/pi); % Convert to deg
 close all;
