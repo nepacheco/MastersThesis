@@ -4,7 +4,7 @@ maxBendPerNotch = 30; % [deg] - angle per notch
 od = 1.62E-3; % [m] - outer diameter of tube
 id = 1.4E-3; % [m] - inner diameter of tube
 n = 5; % number of notches
-maxG = 0.9*od; % [m] - Max depth which we assign to notch n.
+maxG = 0.8642*od; % [m] - Max depth which we assign to notch n.
 [~,h,u] = GetNotchSynthesis(maxBendPerNotch,maxG,od,id,n);
 E_lin = 40E9; % [N/m^2] - Elastic Modulus of Nitinol
 E_se = 0.08*E_lin; % [N/m^2] - Slope of Super Elastic Region for Nitinol
@@ -16,7 +16,7 @@ mu = 0.2; % coefficient of friction for capstan
 % Get the resulting ybar and I from our chosen cut depth
 [maxYbar, minI] = GetNeutralAxis(od/2, id/2, maxG);
 % Desired theta for each notch. If n changes change the size of this vector
-theta_des = [15 16 17 18 19].*pi/180;
+theta_des = [30 30 30 30 30].*pi/180;
 % Determin the approximated linear elastic modulus
 [stress, strain, E] = GetStrainInformation(theta_des(5), h, od/2, maxYbar,E_lin,E_se);
 % Determine force necessary to achieve desired bend at specifically notch n
@@ -111,7 +111,7 @@ theta_mat = theta_mat.*(180/pi); % Convert to deg
 close all;
 figure();
 plot(F,theta_mat);
-title("Notch angles with respect to force applied at tendon Using Josh's Model")
+title(sprintf("Notch angles with respect to force applied at tendon\ndesigned to close at the same time"),'FontSize',16)
 xlabel("Force (N)")
 ylabel("Angle (rad)")
 % *** LABELING OUR DESIRED POINTS ***
