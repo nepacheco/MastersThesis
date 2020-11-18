@@ -112,8 +112,8 @@ close all;
 figure();
 plot(F,theta_mat);
 title(sprintf("Notch angles with respect to force applied at tendon\ndesigned to close at the same time"),'FontSize',16)
-xlabel("Force (N)")
-ylabel("Angle (rad)")
+xlabel("Force (N)",'FontSize',14)
+ylabel("Angle (rad)",'FontSize',14)
 % *** LABELING OUR DESIRED POINTS ***
 labels = {};
 legendLables = {};
@@ -130,7 +130,7 @@ stem(des_points(:,1),des_points(:,2),'.r','MarkerSize',10);
 text(Fdesired.*ones(1,n)-0.01,theta_des.*180/pi,labels,'VerticalAlignment','bottom',...
     'HorizontalAlignment','right');
 hold off
-legend(legendLabels,'Location','northwest');
+legend(legendLabels,'Location','northwest','FontSize',12);
 
 % % *** MEASURING THETA DIFFERENCE ***
 % % Commented out because it messes with previous plot

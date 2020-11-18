@@ -43,8 +43,8 @@ close all;
 figure();
 plot(F,theta_mat);
 title("Notch angles with respect to force applied at tendon",'FontSize', 16)
-xlabel("Force (N)",'FontSize', 12)
-ylabel("Angle (deg)", 'FontSize', 12)
+xlabel("Force (N)",'FontSize', 14)
+ylabel("Angle (deg)", 'FontSize', 14)
 % *** LABELING OUR DESIRED POINTS ***
 labels = {};
 legendLables = {};
@@ -53,4 +53,4 @@ for (i = 1:n)
     legendLabels(i) = cellstr(...
         sprintf("theta %u",i));
 end
-legend(legendLabels,'Location','northwest');
+legend(legendLabels,'Location','northwest','FontSize',12);
