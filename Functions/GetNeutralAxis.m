@@ -12,7 +12,7 @@ p = inputParser();
 addRequired(p,'outerRadius',@isnumeric);
 addRequired(p,'innerRadius',@isnumeric);
 addRequired(p, 'cutDepth',@isnumeric);
-addOptional(p,'CutType',cutType,@(x) any(validatestring(x,cutOptions)));
+addParameter(p,'CutType',cutType,@(x) any(validatestring(x,cutOptions)));
 parse(p,ro,ri,g,varargin{:});
 
 cutType = p.Results.CutType;
@@ -29,8 +29,8 @@ switch(cutType)
         A_i = (ri^2)*(phi_i-sin(phi_i))/2;
         ybar_o = 4*ro*sin(1/2*phi_o)^3/(3*(phi_o - sin(phi_o)));
         ybar_i = 4*ri*sin(1/2*phi_i)^3/(3*(phi_i - sin(phi_i)));
-        ybar = (ybar_o*A_o - ybar_i*A_i)/(A_o - A_i)
-        (A_o - A_i)
+        ybar = (ybar_o*A_o - ybar_i*A_i)/(A_o - A_i);
+        (A_o - A_i);
         
         % using Circular segment for outer and inner regions of tube
         I_o = (phi_o - sin(phi_o) + 2*sin(phi_o)*sin(phi_o/2)^2)*ro^4/8;

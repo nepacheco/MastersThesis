@@ -25,6 +25,7 @@ yinter1 = linspace(yo(1),yi(1),2);
 yinter2 = linspace(yi(end),yo(end),2);
 xbar = xo;
 hold on
+title("Comparing On-Axis and Off-Axis Neutral Bending Planes")
 plot(xo,yo,'b')
 plot(xi,yi,'b')
 plot(xinter1,yinter1,'b',xinter2,yinter2,'b');
@@ -55,5 +56,7 @@ plot(xo,yo,'r')
 plot(xi,yi,'r')
 plot(xinter1,yinter1,'r',xinter2,yinter2,'r');
 plot(xbar,ybar*ones(100,1),'r');
+xlabel("mm")
+ylabel("mm");
 axis equal
 grid on;
