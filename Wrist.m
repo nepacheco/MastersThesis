@@ -40,18 +40,6 @@ classdef Wrist < handle
             obj.phi = phi;
             obj.c = x;
             obj.g = w;
-            
-            obj.transformation = []; % contains every intermediate transform
-            obj.T_tip = zeros(4,4); % Transform from base to tip
-            obj.kappa = zeros(6,1); % [m^-1] Curvature for each notch
-            obj.s = zeros(6,1); % [m] Arc length for each notch
-            obj.theta = zeros(6,1); % [rad] bending angle for each notch
-            obj.alpha = 0; % [rad] Base rotation
-            obj.tau = 0; % [m] Base translation
-            obj.force = 0; % [N] Force on the wire
-            obj.delta_l = 0; % [m] Tendon displacement
-            obj.ybar = zeros(6,1);
-            obj.I = zeros(6,1);
         end
         
         function [path,T_tip,obj] = fwkin(obj,q,varargin)
@@ -84,6 +72,7 @@ classdef Wrist < handle
                     obj.force = q(1);
                     obj.get_force_arc_params();
                 case 'geometry'
+                    disp("geometry")
                     obj.delta_l = q(1);
                     obj.get_geom_arc_params(q(1));
             end
@@ -222,14 +211,16 @@ classdef Wrist < handle
             %   will determine the curvature and arc length of each notch
             %   notched wrist.
             % assumes the l given is the total tendon displacement
-            k = zeros(1,obj.n);
-            s = zeros(1,obj.n);
+            k = zeros(obj.n,1);
+            s = zeros(obj.n,1);
             l = l/obj.n;
             obj.get_neutral_axis();
             for i = 1:obj.n
                 k(i) = l/(obj.h(i)*(obj.ID/2 + obj.ybar(i)) - l*obj.ybar(i));
                 s(i) = obj.h(i)/(1 + obj.ybar(i)*k(i));
             end
+            obj.kappa = k;
+            obj.s = s;
         end
         
         function obj = get_force_arc_params(obj)
@@ -326,9 +317,20 @@ classdef Wrist < handle
             maxL = (kappa*obj.h(1)*(obj.ID/2 + ybar)/(1 + ybar*kappa));
         end
         
-        function plot_stick_model(obj)
+        function obj = plot_stick_model(obj)
+            x_vec = [];
+            y_vec = [];
+            z_vec = [];
+            T = eye(4,4);
             for i = 1:size(obj.transformation,3)
+                T = T*obj.transformation(:,:,i);
+                x_vec = [x_vec T(1,4)];
+                y_vec = [y_vec T(2,4)];
+                z_vec = [z_vec T(3,4)];
             end
+            plot3(x_vec,y_vec,z_vec);
+            axis equal
+            grid on;
         end
     end
 end
