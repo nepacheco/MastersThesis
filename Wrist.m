@@ -70,9 +70,10 @@ classdef Wrist
             switch(type)
                 case 'force'
                     obj.force = q(1);
+                    obj.get_force_arc_params();
                 case 'geometry'
                     obj.delta_l = q(1);
-                    [obj.kappa,obj.s] = obj.get_geom_arc_params(q(1));
+                    obj.get_geom_arc_params(q(1));
             end
             [path,T_tip] = obj.robot_kin(q(2),q(3));
         end
@@ -216,6 +217,61 @@ classdef Wrist
             for i = 1:obj.n
                 k(i) = l/(obj.h(i)*(obj.ID/2 + obj.y_bar(i)) - l*y_bar);
                 s(i) = obj.h(i)/(1 + obj.y_bar(i)*k(i));
+            end
+        end
+        
+        function get_force_arc_params(obj)
+            theta_vec_base = deg2rad(0)*ones(obj.n,1); % this represents the precurvature in each notch
+            
+            % INITIALIZATION OF VECTORS %
+            obj.theta = theta_vec_base; % vector of each notch angle which should start at precurve value
+            F_vec = zeros(obj.n,1); % vector of force experienced by each notch
+            M_vec = zeros(obj.n,1); % vector of moment experienced by each notch
+            E_vec = obj.E_lin*ones(obj.n,1); % effective elastic modulus for each notch
+            mu = 0.2;
+            
+            theta_diff = 100; % start the change in theta high
+            trials = 0; % trials we have completed
+            maxTrials = 10; % maximum number of trials to perform
+            while theta_diff > 1E-6 && trials < maxTrials
+                for ii = 1:obj.n
+                    % Compute distal force and moment
+                    F_vec(ii) = F*exp(-mu*sum(obj.theta(1:ii))); % get force experienced by notch
+                    M_vec(ii) = F_vec(ii)*(obj.ybar(ii) + obj.ID/2); % get moment experienced by notch
+                    obj.theta(ii) = M_vec(ii)*obj.h(ii)/(E_vec(ii)*obj.I(ii)); % update theta
+                    
+                    pct = 100;
+                    k = 1;
+                    % Gradient descent for non-linear modulus
+                    while k<100 && pct>1E-4
+                        
+                        % Compute angular deflection of current segment
+                        obj.theta(ii) = M_vec(ii)*obj.h(ii)/(E_vec(ii)*obj.I(ii));
+                        
+                        % Compute section arc length, curvature and
+                        % strain
+                        s1 = (obj.h(ii)-obj.ybar(ii))*abs(obj.theta(ii));
+                        obj.kappa(ii) = obj.theta(ii)/s1;
+                        epsilon = (obj.kappa(ii).*(obj.OD/2-obj.ybar(ii)))./(1+obj.ybar(ii)*obj.kappa(ii));
+                        
+                        % Update modulus via gradient descent
+                        [stress_eff,eta] = obj.get_stress(abs(epsilon));
+                        new_E = E_vec(ii)-eta*(E_vec(ii)-stress_eff/abs(epsilon));
+                        
+                        % Percent change in modulus (for convergence
+                        % checking)
+                        pct = abs((new_E-E_vec(ii))/E_vec(ii));
+                        
+                        % Update modulus guess
+                        E_vec(ii) = new_E;
+                        
+                        % Increment
+                        k = k+1;
+                    end
+                    
+                end
+                obj.theta = obj.theta + theta_vec_base; % add offset for precurvature
+                trials = trials + 1; % increment
             end
         end
         
