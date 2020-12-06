@@ -1,4 +1,4 @@
-classdef Wrist < handle
+classdef JoshWrist < handle
 % Description: This class defines a framework for constructing slotted 
 % wrists with variable notch geometries and simulating their kinematics and
 % mechanics. Kinematics/Mechanics modeling is a Castigliano-based

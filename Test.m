@@ -18,7 +18,7 @@ b = 1.5E-3;             % Distal offset [m]
 FOS = 1;                % Factor of Safety
 
 % Create instance of wrist object
-newSheath = Wrist();
+newSheath = JoshWrist();
 newSheath.ConstructWrist('T_0',T_0,'g',g,'c',c,'b',b,'h',h,'h_c',h_c,'r_o',r_o,'r_i',r_i,'n',N,'material','nitinol','plotkin',true);
 
 % Find maximum force for desired factor-of-safety
