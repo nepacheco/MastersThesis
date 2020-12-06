@@ -11,7 +11,7 @@ delta_l = 0.5E-3; % [mm] tendon displacement
 theta_vec_base = deg2rad(2)*ones(n,1); % this represents the precurvature in each notch
 
 wrist = Wrist(ro*2,ri*2,n,h*ones(n,1),zeros(n,1),c*ones(n,1),g*ones(n,1));
-ybar = wrist.get_neutral_axis(1);
+ybar = wrist.get_neutral_axis();
 p = zeros(3,2);
 
 theta = deg2rad(10)*ones(n,1);
@@ -28,7 +28,7 @@ for j = 1:2
     if(sum(theta) - theta_max > 1E-6)
         disp("error")
     end
-    kappa = theta./(h-ybar.*theta);
+    kappa = theta./(h-ybar(1).*theta);
     s = zeros(n,1);
     for i = 1:n
         if(kappa(i)>0)
@@ -37,14 +37,11 @@ for j = 1:2
             s(i) = h;
         end
     end
-    
-    T = eye(4,4);
-    for i = 1:n
-        T_arc = wrist.get_arc_fwdkin(kappa(i),0,s(i));
-        T = T*T_arc;
-        T_straight = wrist.get_arc_fwdkin(0,0,c);
-        T = T*T_straight;
-    end
+    wrist.kappa = kappa;
+    wrist.s = s;
+    wrist.alpha = 0;
+    wrist.tau = 0;
+    [~,T] = wrist.robot_kin();
     
     p(:,j) = T(1:3,4)*1000;
 end

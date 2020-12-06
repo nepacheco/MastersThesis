@@ -3,6 +3,7 @@ classdef Wrist
     %   Detailed explanation goes here
     
     properties
+        % Tube Geometry properties
         OD = 1.62E-3;               % outer diameter of tube
         ID = 1.4E-3;               % inner diameter of tube
         n = 6;                      % number of notches
@@ -12,8 +13,20 @@ classdef Wrist
         g = 1.45E-3.*ones(6,1);         % vector containing tube notch height
         E_lin = 40E9;
         E_se = 0.08*40E9;
-        transformations = [];
-        T_tip = zeros(4,4);
+        
+        % Kinematic properties
+        transformation = []; % contains every intermediate transform
+        T_tip = zeros(4,4); % Transform from base to tip
+        kappa = zeros(6,1); % [m^-1] Curvature for each notch
+        s = zeros(6,1); % [m] Arc length for each notch
+        theta = zeros(6,1); % [rad] bending angle for each notch
+        alpha = 0 % [rad] Base rotation
+        tau = 0; % [m] Base translation
+        force = 0; % [N] Force on the wire
+        delta_l = 0; % [m] Tendon displacement
+        ybar = zeros(6,1);
+        I = zeros(6,1);
+        
     end
     
     methods
@@ -52,31 +65,29 @@ classdef Wrist
             type = p.Results.Type;
             %*********************************************
             
+            obj.alpha = q(2);
+            obj.tau = q(3);
             switch(type)
                 case 'force'
+                    obj.force = q(1);
                 case 'geometry'
-                    [k,s] = obj.get_geom_arc_params(q(1));
+                    obj.delta_l = q(1);
+                    [obj.kappa,obj.s] = obj.get_geom_arc_params(q(1));
             end
-            [path,T_tip] = obj.robot_kin([k,s],q(2),q(3));
+            [path,T_tip] = obj.robot_kin(q(2),q(3));
         end
         
         
-        function [path,T_tip] = robot_kin(obj, arc_parameters,alpha,d)
+        function [path,T] = robot_kin(obj)
             %ROBOT_KIN - returns the forward kinematics of a notched wrist
-            %   arc parameters is a (n,2) matrix containing the curvature
-            %       and arc length for each notched section
-            %   alpha - represents base rotation
-            %   d - base translation
-            k = arc_parameters(:,1);
-            s = arc_parameters(:,2);
             
             % Initial frame and translation section
-            transformation = zeros(4,4,2*(obj.n+1));
+            obj.transformation = zeros(4,4,2*(obj.n+1));
             % Plotting multiple frames from multiple sections of tube
             obj.T_tip = obj.get_arc_fwdkin(0,0,0);
             obj.transformation(:,:,1) = obj.get_arc_fwdkin(0,0,0);
             % Add section of un-notched tube
-            T_straight = obj.get_arc_fwdkin(0, alpha, d);
+            T_straight = obj.get_arc_fwdkin(0, obj.alpha, obj.tau);
             obj.transformation(:,:,2) = T_straight;
             obj.T_tip = obj.T_tip*T_straight;
             
@@ -84,14 +95,15 @@ classdef Wrist
             % getting position of notches
             % For loop to go through the c, h, and g, matrices to create
             for i = 1:obj.n
-                T_arc = obj.get_arc_fwdkin(k(i), 0, s(i));
-                transformation(:,:,2*i + 1) = T_arc;
+                T_arc = obj.get_arc_fwdkin(obj.kappa(i), 0, obj.s(i));
+                obj.transformation(:,:,2*i + 1) = T_arc;
                 obj.T_tip = obj.T_tip*T_arc;
                 T_straight = obj.get_arc_fwdkin(0,obj.phi(i),obj.c(i));
-                transformation(:,:,2*i+2) = T_straight;
-                obj.T_tip = T_tip*T_straight;
+                obj.transformation(:,:,2*i+2) = T_straight;
+                obj.T_tip = obj.T_tip*T_straight;
             end
-            path = transformation;
+            path = obj.transformation;
+            T = obj.T_tip;
         end
         
         function transform = get_arc_fwdkin(obj,kappa,phi,arc_length)
@@ -124,7 +136,7 @@ classdef Wrist
             transform = T(kappa, phi,arc_length);
         end
         
-        function [ybar, I] = get_neutral_axis(obj,index,varargin)
+        function [ybar_, I_] = get_neutral_axis(obj,varargin)
             %GETNEUTRALAXIS - returns the distance to neutral bending axis and area
             %moment of inertia about bending axis
             
@@ -135,56 +147,59 @@ classdef Wrist
             
             p = inputParser();
             addRequired(p,'obj');
-            addRequired(p,'index',@(x) isnumeric(x));
             addParameter(p,'CutType',cutType,@(x) any(validatestring(x,cutOptions)));
-            parse(p,obj,index,varargin{:});
+            parse(p,obj,varargin{:});
             
             cutType = p.Results.CutType;
             %*********************************************
-            
-            switch(cutType)
-                case 'off-axis'
-                    % Assumes we are cutting between center of tube and inner radius
-                    phi_o = 2*acos((obj.g(index) - obj.OD/2)/(obj.OD/2));
-                    phi_i = 2*acos((obj.g(index) - obj.OD/2)/(obj.ID/2));
-                    
-                    % Equations from Swaney and York
-                    A_o = ((obj.OD/2)^2)*(phi_o-sin(phi_o))/2;
-                    A_i = ((obj.ID/2)^2)*(phi_i-sin(phi_i))/2;
-                    ybar_o = 4*(obj.OD/2)*sin(1/2*phi_o)^3/(3*(phi_o - sin(phi_o)));
-                    ybar_i = 4*(obj.ID/2)*sin(1/2*phi_i)^3/(3*(phi_i - sin(phi_i)));
-                    ybar = (ybar_o*A_o - ybar_i*A_i)/(A_o - A_i);
-                    (A_o - A_i);
-                    
-                    % using Circular segment for outer and inner regions of tube
-                    I_o = (phi_o - sin(phi_o) + 2*sin(phi_o)*sin(phi_o/2)^2)*(obj.OD/2)^4/8;
-                    I_i = (phi_i - sin(phi_i) + 2*sin(phi_i)*sin(phi_i/2)^2)*(obj.ID/2)^4/8;
-                    % subtract inner from outer to determine area moment of inertia for cut
-                    % section only
-                    Io = I_o - I_i;
-                    % Use parallel axis theorem to shift the area moment of inertia to centroid
-                    % of the notch
-                    I = Io - (A_o - A_i)*ybar^2;
-                case 'on-axis'
-                    phi_o = 2*acos((obj.g(index) - (obj.OD/2))/ri);
-                    
-                    ybar_o = 2*(obj.OD/2)*sin(phi_o/2)/(3*phi_o/2);
-                    ybar_i = 2*(obj.ID/2)*sin(phi_o/2)/(3*phi_o/2);
-                    Ao = phi_o/2*(obj.OD/2)^2;
-                    Ai = phi_o/2*(obj.ID/2)^2;
-                    A = Ao - Ai;
-                    ybar = (Ao*ybar_o - Ai*ybar_i)/A;
-                    
-                    % Using Circular Sector for outer and inner regions of tube
-                    I_o = (obj.OD/2)^4/4 * (phi_o/2 + 1/2*sin(phi_o));
-                    I_i = ri^4/4*(phi_o/2 + 1/2*sin(phi_o));
-                    % Subtract inner from outer to determine area moment of inertia for
-                    % the remaining backbone
-                    Iprime = I_o - I_i;
-                    % Parallel axis theorem to move the area moment of inertia to
-                    % centroid of notch
-                    I = Iprime - A*ybar^2;
+            obj.ybar = zeros(obj.n,1);
+            obj.I = zeros(obj.n,1);
+            for index = 1:obj.n
+                switch(cutType)
+                    case 'off-axis'
+                        % Assumes we are cutting between center of tube and inner radius
+                        phi_o = 2*acos((obj.g(index) - obj.OD/2)/(obj.OD/2));
+                        phi_i = 2*acos((obj.g(index) - obj.OD/2)/(obj.ID/2));
+                        
+                        % Equations from Swaney and York
+                        A_o = ((obj.OD/2)^2)*(phi_o-sin(phi_o))/2;
+                        A_i = ((obj.ID/2)^2)*(phi_i-sin(phi_i))/2;
+                        ybar_o = 4*(obj.OD/2)*sin(1/2*phi_o)^3/(3*(phi_o - sin(phi_o)));
+                        ybar_i = 4*(obj.ID/2)*sin(1/2*phi_i)^3/(3*(phi_i - sin(phi_i)));
+                        obj.ybar(index) = (ybar_o*A_o - ybar_i*A_i)/(A_o - A_i);
+                        
+                        % using Circular segment for outer and inner regions of tube
+                        I_o = (phi_o - sin(phi_o) + 2*sin(phi_o)*sin(phi_o/2)^2)*(obj.OD/2)^4/8;
+                        I_i = (phi_i - sin(phi_i) + 2*sin(phi_i)*sin(phi_i/2)^2)*(obj.ID/2)^4/8;
+                        % subtract inner from outer to determine area moment of inertia for cut
+                        % section only
+                        Io = I_o - I_i;
+                        % Use parallel axis theorem to shift the area moment of inertia to centroid
+                        % of the notch
+                        obj.I(index) = Io - (A_o - A_i)*obj.ybar(index)^2;
+                    case 'on-axis'
+                        phi_o = 2*acos((obj.g(index) - (obj.OD/2))/ri);
+                        
+                        ybar_o = 2*(obj.OD/2)*sin(phi_o/2)/(3*phi_o/2);
+                        ybar_i = 2*(obj.ID/2)*sin(phi_o/2)/(3*phi_o/2);
+                        Ao = phi_o/2*(obj.OD/2)^2;
+                        Ai = phi_o/2*(obj.ID/2)^2;
+                        A = Ao - Ai;
+                        obj.ybar(index) = (Ao*ybar_o - Ai*ybar_i)/A;
+                        
+                        % Using Circular Sector for outer and inner regions of tube
+                        I_o = (obj.OD/2)^4/4 * (phi_o/2 + 1/2*sin(phi_o));
+                        I_i = ri^4/4*(phi_o/2 + 1/2*sin(phi_o));
+                        % Subtract inner from outer to determine area moment of inertia for
+                        % the remaining backbone
+                        Iprime = I_o - I_i;
+                        % Parallel axis theorem to move the area moment of inertia to
+                        % centroid of notch
+                        obj.I(index) = Iprime - A*obj.ybar(index)^2;
+                end
             end
+            ybar_ = obj.ybar;
+            I_ = obj.I;
         end
         
         function [k, s] = get_geom_arc_params(obj, l)
@@ -197,21 +212,21 @@ classdef Wrist
             k = zeros(1,obj.n);
             s = zeros(1,obj.n);
             l = l/obj.n;
+            obj.get_neutral_axis();
             for i = 1:obj.n
-                y_bar = obj.get_neutral_axis(i);
-                k(i) = l/(obj.h(i)*(obj.ID/2 + y_bar) - l*y_bar);
-                s(i) = obj.h(i)/(1 + y_bar*k(i));
+                k(i) = l/(obj.h(i)*(obj.ID/2 + obj.y_bar(i)) - l*y_bar);
+                s(i) = obj.h(i)/(1 + obj.y_bar(i)*k(i));
             end
         end
         
         function maxStrain = calcMaxStrain(obj, q)
             %CALCMAXSTRAIN - takes as input a vector q of actuator variables
             %and calculates the maximum strain underwent by the material
-            delta_l = q(1);
-            ybar = obj.get_neutral_axis(1);
-            y = max([obj.OD/2 - ybar,obj.w(1)-obj.OD/2-ybar]);
-            [k, s] = obj.get_geom_arc_params(delta_l);
-            maxStrain = abs(k(1)*y/(1 + ybar*k(1)));
+            obj.delta_l = q(1);
+            obj.get_neutral_axis();
+            y = max([obj.OD/2 - obj.ybar(1),obj.w(1)-obj.OD/2-obj.ybar(1)]);
+            obj.get_geom_arc_params(obj.delta_l);
+            maxStrain = abs(obj.k(1)*y/(1 + obj.ybar(1)*obj.k(1)));
             if maxStrain > 0.08
                 warning("Exceeding maximum recoverable strain: %f",...
                     maxStrain);
