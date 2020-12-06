@@ -328,7 +328,7 @@ classdef Wrist < handle
                 y_vec = [y_vec T(2,4)];
                 z_vec = [z_vec T(3,4)];
             end
-            plot3(x_vec,y_vec,z_vec);
+            plot3(x_vec,y_vec,z_vec,'Linewidth',2.5);
             axis equal
             grid on;
         end

@@ -1,3 +1,5 @@
+clc; clear; close all
+
 % TUBE PARAMS %
 n = 5; % number of notches
 ro = (1.62E-3)/2; % [mm] outer radius
@@ -14,16 +16,16 @@ wrist = Wrist(ro*2,ri*2,n,h*ones(n,1),zeros(n,1),c*ones(n,1),g*ones(n,1));
 ybar = wrist.get_neutral_axis();
 p = zeros(3,2);
 
-theta = deg2rad(10)*ones(n,1);
+theta = deg2rad(15)*ones(n,1);
 theta_max = sum(theta);
 
 for j = 1:2
     if j == 2
-        theta(1) = 0.5*theta_max;
-        theta(2) = 0.3*theta_max;
+        theta(1) = 0.45*theta_max;
+        theta(2) = 0.25*theta_max;
         theta(3) = 0.1*theta_max;
-        theta(4) = 0.05*theta_max;
-        theta(5) = 0.05*theta_max;
+        theta(4) = 0.1*theta_max;
+        theta(5) = 0.1*theta_max;
     end
     if(sum(theta) - theta_max > 1E-6)
         disp("error")
@@ -42,7 +44,12 @@ for j = 1:2
     wrist.alpha = 0;
     wrist.tau = 0;
     [~,T] = wrist.robot_kin();
-    
     p(:,j) = T(1:3,4)*1000;
+    wrist.plot_stick_model();
+    xlim([0,15e-3]);
+    ylim([0,1e-3]);
+    zlim([0,15e-3]);
+    hold on
 end
+legend('Equal Bending','Unequal Bending');
 fprintf("Difference in tip positions: %f\n",norm(p(:,1)-p(:,2)))
