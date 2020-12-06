@@ -1,4 +1,4 @@
-classdef Wrist
+classdef Wrist < handle
     %WRIST Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -40,9 +40,21 @@ classdef Wrist
             obj.phi = phi;
             obj.c = x;
             obj.g = w;
+            
+            obj.transformation = []; % contains every intermediate transform
+            obj.T_tip = zeros(4,4); % Transform from base to tip
+            obj.kappa = zeros(6,1); % [m^-1] Curvature for each notch
+            obj.s = zeros(6,1); % [m] Arc length for each notch
+            obj.theta = zeros(6,1); % [rad] bending angle for each notch
+            obj.alpha = 0; % [rad] Base rotation
+            obj.tau = 0; % [m] Base translation
+            obj.force = 0; % [N] Force on the wire
+            obj.delta_l = 0; % [m] Tendon displacement
+            obj.ybar = zeros(6,1);
+            obj.I = zeros(6,1);
         end
         
-        function [path,T_tip] = fwkin(obj,q,varargin)
+        function [path,T_tip,obj] = fwkin(obj,q,varargin)
             %FWKIN - returns the forward kinematics of a notched wrist
             %depending on the input paramters q and whether we are using
             %force or geometry model to determine arc paratmers
@@ -75,13 +87,13 @@ classdef Wrist
                     obj.delta_l = q(1);
                     obj.get_geom_arc_params(q(1));
             end
-            [path,T_tip] = obj.robot_kin(q(2),q(3));
+            [path,T_tip] = obj.robot_kin();
         end
         
         
-        function [path,T] = robot_kin(obj)
+        function [path,T,obj] = robot_kin(obj)
             %ROBOT_KIN - returns the forward kinematics of a notched wrist
-            
+            disp("Running robot Kin")
             % Initial frame and translation section
             obj.transformation = zeros(4,4,2*(obj.n+1));
             % Plotting multiple frames from multiple sections of tube
@@ -107,7 +119,7 @@ classdef Wrist
             T = obj.T_tip;
         end
         
-        function transform = get_arc_fwdkin(obj,kappa,phi,arc_length)
+        function [transform,obj] = get_arc_fwdkin(obj,kappa,phi,arc_length)
             %GET_ARC_FWDKIN - Define transformation matrices based on arc parameters
             % theta - rotation about the base
             % k - 1/r where r is the radius of curvature
@@ -137,7 +149,7 @@ classdef Wrist
             transform = T(kappa, phi,arc_length);
         end
         
-        function [ybar_, I_] = get_neutral_axis(obj,varargin)
+        function [ybar_, I_,obj] = get_neutral_axis(obj,varargin)
             %GETNEUTRALAXIS - returns the distance to neutral bending axis and area
             %moment of inertia about bending axis
             
@@ -203,7 +215,7 @@ classdef Wrist
             I_ = obj.I;
         end
         
-        function [k, s] = get_geom_arc_params(obj, l)
+        function [k, s,obj] = get_geom_arc_params(obj, l)
             %GET_ARC_PARAMS - gets the curvature and arc length of notched
             %wrist
             %   Given a specific tendon displacement this function
@@ -215,12 +227,12 @@ classdef Wrist
             l = l/obj.n;
             obj.get_neutral_axis();
             for i = 1:obj.n
-                k(i) = l/(obj.h(i)*(obj.ID/2 + obj.y_bar(i)) - l*y_bar);
-                s(i) = obj.h(i)/(1 + obj.y_bar(i)*k(i));
+                k(i) = l/(obj.h(i)*(obj.ID/2 + obj.ybar(i)) - l*obj.ybar(i));
+                s(i) = obj.h(i)/(1 + obj.ybar(i)*k(i));
             end
         end
         
-        function get_force_arc_params(obj)
+        function obj = get_force_arc_params(obj)
             theta_vec_base = deg2rad(0)*ones(obj.n,1); % this represents the precurvature in each notch
             
             % INITIALIZATION OF VECTORS %
@@ -312,6 +324,11 @@ classdef Wrist
             maxStrain = 0.08;
             kappa = maxStrain/(obj.OD/2 - ybar*(1 + maxStrain));
             maxL = (kappa*obj.h(1)*(obj.ID/2 + ybar)/(1 + ybar*kappa));
+        end
+        
+        function plot_stick_model(obj)
+            for i = 1:size(obj.transformation,3)
+            end
         end
     end
 end
