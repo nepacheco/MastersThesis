@@ -23,7 +23,7 @@ b = u;             % Distal offset [m]
 FOS = 1;                % Factor of Safety
 
 % Create instance of wrist object
-sheath = Wrist();
+sheath = JoshWrist();
 sheath.ConstructWrist('T_0',T_0,'g',g,'c',c,'b',b,'h',h_w,'h_c',h_c,...
     'r_o',r_o,'r_i',r_i,'n',N,'material','nitinol','plotkin',false,'verbose',false);
 
