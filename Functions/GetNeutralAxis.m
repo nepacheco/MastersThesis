@@ -12,7 +12,7 @@ p = inputParser();
 addRequired(p,'outerRadius',@isnumeric);
 addRequired(p,'innerRadius',@isnumeric);
 addRequired(p, 'cutDepth',@isnumeric);
-addParameter(p,'CutType',cutType,@(x) any(validatestring(x,cutOptions)));
+addOptional(p,'CutType',cutType,@(x) any(validatestring(x,cutOptions)));
 parse(p,ro,ri,g,varargin{:});
 
 cutType = p.Results.CutType;

@@ -27,19 +27,43 @@ classdef Wrist < handle
         ybar = zeros(6,1);
         I = zeros(6,1);
         
+        cutType = 'on-axis'
+        
     end
     
     methods
-        function obj = Wrist(OD,ID, n, h, phi, x, w)
+        function obj = Wrist(OD,ID, n, h, phi, c, g, varargin)
             %WRIST Construct an instance of this class
             %   Detailed explanation goes here
+                        
+            %****** INPUT PARSING *********************
+            % default values
+            cutType = 'off-axis';
+            cutOptions = {'off-axis','on-axis'};
+            
+            p = inputParser();
+            addRequired(p,'OD');
+            addRequired(p,'ID');
+            addRequired(p,'n');
+            addRequired(p,'h');
+            addRequired(p,'phi');
+            addRequired(p,'c');
+            addRequired(p,'g');
+            addParameter(p,'CutType',cutType,@(x) any(validatestring(x,cutOptions)));
+            parse(p,OD,ID,n,h,phi,c,g,varargin{:});
+            
+            obj.cutType = p.Results.CutType;
+            %*********************************************
+            
             obj.OD = OD;
             obj.ID = ID;
             obj.n = n;
             obj.h = h;
             obj.phi = phi;
-            obj.c = x;
-            obj.g = w;
+            obj.c = c;
+            obj.g = g;
+            
+            obj.get_neutral_axis(); % Define geometry parameters
         end
         
         function [path,T_tip,obj] = fwkin(obj,q,varargin)
@@ -138,26 +162,14 @@ classdef Wrist < handle
             transform = T(kappa, phi,arc_length);
         end
         
-        function [ybar_, I_,obj] = get_neutral_axis(obj,varargin)
+        function [ybar_, I_,obj] = get_neutral_axis(obj)
             %GETNEUTRALAXIS - returns the distance to neutral bending axis and area
             %moment of inertia about bending axis
-            
-            %****** INPUT PARSING *********************
-            % default values
-            cutType = 'off-axis';
-            cutOptions = {'off-axis','on-axis'};
-            
-            p = inputParser();
-            addRequired(p,'obj');
-            addParameter(p,'CutType',cutType,@(x) any(validatestring(x,cutOptions)));
-            parse(p,obj,varargin{:});
-            
-            cutType = p.Results.CutType;
-            %*********************************************
+
             obj.ybar = zeros(obj.n,1);
             obj.I = zeros(obj.n,1);
             for index = 1:obj.n
-                switch(cutType)
+                switch(obj.cutType)
                     case 'off-axis'
                         % Assumes we are cutting between center of tube and inner radius
                         phi_o = 2*acos((obj.g(index) - obj.OD/2)/(obj.OD/2));
@@ -191,7 +203,7 @@ classdef Wrist < handle
                         
                         % Using Circular Sector for outer and inner regions of tube
                         I_o = (obj.OD/2)^4/4 * (phi_o/2 + 1/2*sin(phi_o));
-                        I_i = ri^4/4*(phi_o/2 + 1/2*sin(phi_o));
+                        I_i = (obj.ID/2)^4/4*(phi_o/2 + 1/2*sin(phi_o));
                         % Subtract inner from outer to determine area moment of inertia for
                         % the remaining backbone
                         Iprime = I_o - I_i;
@@ -233,11 +245,14 @@ classdef Wrist < handle
             E_vec = obj.E_lin*ones(obj.n,1); % effective elastic modulus for each notch
             mu = 0.2;
             
-            theta_diff = 100; % start the change in theta high
+            
+            theta_delta = 100; % start the change in theta high
+            theta_last = obj.theta;
             trials = 0; % trials we have completed
             maxTrials = 10; % maximum number of trials to perform
-            while theta_diff > 1E-6 && trials < maxTrials
+            while theta_delta > 1E-6 && trials < maxTrials
                 for ii = 1:obj.n
+                    obj.check_notch_limits();
                     % Compute distal force and moment
                     F_vec(ii) = F*exp(-mu*sum(obj.theta(1:ii))); % get force experienced by notch
                     M_vec(ii) = F_vec(ii)*(obj.ybar(ii) + obj.ID/2); % get moment experienced by notch
@@ -251,6 +266,7 @@ classdef Wrist < handle
                         % Compute angular deflection of current segment
                         obj.theta(ii) = M_vec(ii)*obj.h(ii)/(E_vec(ii)*obj.I(ii));
                         
+                        obj.check_notch_limits();
                         % Compute section arc length, curvature and
                         % strain
                         s1 = (obj.h(ii)-obj.ybar(ii))*abs(obj.theta(ii));
@@ -274,7 +290,20 @@ classdef Wrist < handle
                     
                 end
                 obj.theta = obj.theta + theta_vec_base; % add offset for precurvature
+                theta_delta = sum(obj.theta)-sum(theta_last);
+                theta_last = obj.theta;
                 trials = trials + 1; % increment
+            end
+        end
+        
+        function obj = check_notch_limits(obj)
+        %CHECK_NOTCH_LIMITS - makes sure the notches aren't closing past
+        %what they should do based on geometry.
+            for i = 1:obj.n
+                theta_max = obj.h(i)/(obj.OD/2 + obj.ybar(i));
+                if obj.theta(i) > theta_max
+                    obj.theta(i) = theta_max;
+                end
             end
         end
         
