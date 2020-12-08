@@ -180,7 +180,7 @@ classdef Wrist < handle
                         % of the notch
                         obj.I(index) = Io - (A_o - A_i)*obj.ybar(index)^2;
                     case 'on-axis'
-                        phi_o = 2*acos((obj.g(index) - (obj.OD/2))/ri);
+                        phi_o = 2*acos((obj.g(index) - (obj.OD/2))/(obj.OD/2));
                         
                         ybar_o = 2*(obj.OD/2)*sin(phi_o/2)/(3*phi_o/2);
                         ybar_i = 2*(obj.ID/2)*sin(phi_o/2)/(3*phi_o/2);

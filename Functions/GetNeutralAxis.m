@@ -42,7 +42,7 @@ switch(cutType)
         % of the notch
         I = Io - (A_o - A_i)*ybar^2;
     case 'on-axis'
-        phi = 2*acos((g - ro)/ri);
+        phi = 2*acos((g - ro)/ro);
 
         ybar_o = 2*ro*sin(phi/2)/(3*phi/2);
         ybar_i = 2*ri*sin(phi/2)/(3*phi/2);
