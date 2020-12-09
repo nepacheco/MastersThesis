@@ -20,6 +20,7 @@ classdef Wrist < handle
         kappa = zeros(6,1); % [m^-1] Curvature for each notch
         s = zeros(6,1); % [m] Arc length for each notch
         theta = zeros(6,1); % [rad] bending angle for each notch
+        precurve_theta = zeros(6,1);
         alpha = 0 % [rad] Base rotation
         tau = 0; % [m] Base translation
         F = 0; % [N] Force on the wire
@@ -27,6 +28,7 @@ classdef Wrist < handle
         ybar = zeros(6,1);
         I = zeros(6,1);
         
+        DEBUG = true;
         cutType = 'on-axis'
         
     end
@@ -35,7 +37,7 @@ classdef Wrist < handle
         function obj = Wrist(OD,ID, n, h, phi, c, g, varargin)
             %WRIST Construct an instance of this class
             %   Detailed explanation goes here
-                        
+            
             %****** INPUT PARSING *********************
             % default values
             cutType = 'off-axis';
@@ -62,6 +64,7 @@ classdef Wrist < handle
             obj.phi = phi;
             obj.c = c;
             obj.g = g;
+            obj.precurve_theta = zeros(n,1);
             
             obj.get_neutral_axis(); % Define geometry parameters
         end
@@ -96,7 +99,6 @@ classdef Wrist < handle
                     obj.F = q(1);
                     obj.get_force_arc_params();
                 case 'geometry'
-                    disp("geometry")
                     obj.delta_l = q(1);
                     obj.get_geom_arc_params(q(1));
             end
@@ -164,26 +166,27 @@ classdef Wrist < handle
         function [ybar_, I_,obj] = get_neutral_axis(obj)
             %GETNEUTRALAXIS - returns the distance to neutral bending axis and area
             %moment of inertia about bending axis
-
+            ro = obj.OD/2;
+            ri = obj.ID/2;
             obj.ybar = zeros(obj.n,1);
             obj.I = zeros(obj.n,1);
             for index = 1:obj.n
                 switch(obj.cutType)
                     case 'off-axis'
                         % Assumes we are cutting between center of tube and inner radius
-                        phi_o = 2*acos((obj.g(index) - obj.OD/2)/(obj.OD/2));
-                        phi_i = 2*acos((obj.g(index) - obj.OD/2)/(obj.ID/2));
+                        phi_o = 2*acos((obj.g(index) - ro)/ro);
+                        phi_i = 2*acos((obj.g(index) - ro)/ri);
                         
                         % Equations from Swaney and York
-                        A_o = ((obj.OD/2)^2)*(phi_o-sin(phi_o))/2;
-                        A_i = ((obj.ID/2)^2)*(phi_i-sin(phi_i))/2;
-                        ybar_o = 4*(obj.OD/2)*sin(1/2*phi_o)^3/(3*(phi_o - sin(phi_o)));
-                        ybar_i = 4*(obj.ID/2)*sin(1/2*phi_i)^3/(3*(phi_i - sin(phi_i)));
+                        A_o = (ro^2)*(phi_o-sin(phi_o))/2;
+                        A_i = (ri^2)*(phi_i-sin(phi_i))/2;
+                        ybar_o = 4*ro*sin(1/2*phi_o)^3/(3*(phi_o - sin(phi_o)));
+                        ybar_i = 4*ri*sin(1/2*phi_i)^3/(3*(phi_i - sin(phi_i)));
                         obj.ybar(index) = (ybar_o*A_o - ybar_i*A_i)/(A_o - A_i);
                         
                         % using Circular segment for outer and inner regions of tube
-                        I_o = (phi_o - sin(phi_o) + 2*sin(phi_o)*sin(phi_o/2)^2)*(obj.OD/2)^4/8;
-                        I_i = (phi_i - sin(phi_i) + 2*sin(phi_i)*sin(phi_i/2)^2)*(obj.ID/2)^4/8;
+                        I_o = (phi_o - sin(phi_o) + 2*sin(phi_o)*sin(phi_o/2)^2)*ro^4/8;
+                        I_i = (phi_i - sin(phi_i) + 2*sin(phi_i)*sin(phi_i/2)^2)*ri^4/8;
                         % subtract inner from outer to determine area moment of inertia for cut
                         % section only
                         Io = I_o - I_i;
@@ -232,16 +235,24 @@ classdef Wrist < handle
             end
             obj.kappa = k;
             obj.s = s;
+            obj.theta = obj.kappa.*obj.s;
+            for(i = 1:obj.n)
+                obj.check_notch_limits(i);
+            end
         end
         
-        function obj = get_force_arc_params(obj)            
+        function obj = get_force_arc_params(obj)
             % INITIALIZATION OF VECTORS %
-            obj.theta = zeros(obj.n,1); % vector of each notch angle which should start at precurve value
+            obj.theta = obj.precurve_theta; % vector of each notch angle which should start at precurve value
             F_vec = zeros(obj.n,1); % vector of force experienced by each notch
             M_vec = zeros(obj.n,1); % vector of moment experienced by each notch
             E_vec = obj.E_lin*ones(obj.n,1); % effective elastic modulus for each notch
             mu = 0.2;
             
+            if (obj.DEBUG)
+                debug_mat = [];
+                debug_vector = [];
+            end
             
             theta_delta = 100; % start the change in theta high
             theta_last = obj.theta;
@@ -249,12 +260,12 @@ classdef Wrist < handle
             maxTrials = 10; % maximum number of trials to perform
             while theta_delta > 1E-6 && trials < maxTrials
                 for ii = 1:obj.n
-%                     obj.check_notch_limits();
+                    %                     obj.check_notch_limits();
                     E_vec(ii) = obj.E_lin;
                     % Compute distal force and moment
                     F_vec(ii) = obj.F*exp(-mu*sum(obj.theta(1:ii))); % get force experienced by notch
                     M_vec(ii) = F_vec(ii)*(obj.ybar(ii) + obj.ID/2); % get moment experienced by notch
-                    
+
                     pct = 100;
                     k = 1;
                     % Gradient descent for non-linear modulus
@@ -281,20 +292,27 @@ classdef Wrist < handle
                         % Update modulus guess
                         E_vec(ii) = new_E;
                         
+                        if(obj.DEBUG)
+                          debug_vec = [trials, k, s1, obj.kappa(ii), epsilon, stress_eff, eta, new_E];
+                          debug_mat = [debug_mat; debug_vec];
+                        end
                         % Increment
                         k = k+1;
                     end
-                    
+                    obj.theta = obj.theta + obj.precurve_theta;
                 end
                 theta_delta = sum(obj.theta)-sum(theta_last);
 %                 theta_last = obj.theta;
                 trials = trials + 1; % increment
             end
+            if (obj.DEBUG)
+                writematrix(debug_mat,"wrist_fwkin.csv")
+            end
         end
         
         function obj = check_notch_limits(obj,index)
-        %CHECK_NOTCH_LIMITS - makes sure the notches aren't closing past
-        %what they should do based on geometry.
+            %CHECK_NOTCH_LIMITS - makes sure the notches aren't closing past
+            %what they should do based on geometry.
             if obj.theta(index) >= 0 && (obj.h(index)/(obj.OD/2 + obj.ybar(index)) <= obj.theta(index))
                 obj.theta(index) = obj.h(index)/(obj.OD/2 + obj.ybar(index));
             end

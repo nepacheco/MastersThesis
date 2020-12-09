@@ -266,7 +266,8 @@ classdef JoshWrist < handle
             else
                 p = 1;
             end
-            
+            debug_mat = [];
+            debug_vector = [];
             % Fixed-point iteration
             while p<10 && theta_delta>1E-6
                 
@@ -285,7 +286,6 @@ classdef JoshWrist < handle
                         % Compute distal force and moment
                         obj.F(idx1) = F_adj*exp(-obj.mu*sum(obj.theta(1:idx1)));
                         obj.M(idx1) = obj.F(idx1)*(obj.ybar(idx1)+obj.r_i);
-                        
                         if strcmp(obj.material_model,'superelastic')
  
                             pct = 100;
@@ -296,7 +296,7 @@ classdef JoshWrist < handle
                                                               
                                 % Compute angular deflection of current segment
                                 obj.theta(idx1) = obj.M(idx1)*obj.h(idx1)/(obj.E_eff(idx1)*obj.J(idx1));
-                                
+                               
                                 % Check to see if notch angle closes the notch, and
                                 % if so, limit the notch angle
                                 obj.CheckLimits(idx1);
@@ -314,7 +314,10 @@ classdef JoshWrist < handle
                                 % Percent change in modulus (for convergence
                                 % checking)
                                 pct = abs((new_E-obj.E_eff(idx1))/obj.E_eff(idx1));
-                                
+                                % NICK PRINTING STUFF %
+                                debug_vec = [p, k, s1, kappa, epsilon, stress_eff,eta, new_E];
+                                debug_mat = [debug_mat; debug_vec];
+                                %%%%%%%
                                 % Update modulus guess
                                 obj.E_eff(idx1) = new_E;
                                 
@@ -449,6 +452,7 @@ classdef JoshWrist < handle
                 drawnow;
                 
             end
+            writematrix(debug_mat,"josh_fwkin.csv")
         end
         
         function obj = CheckLimits(obj,idx)
