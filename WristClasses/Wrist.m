@@ -12,7 +12,7 @@ classdef Wrist < handle
         c = 1.0E-3.*ones(6,1);        % vector containing notch spacing parameters
         g = 1.45E-3.*ones(6,1);         % vector containing tube notch height
         E_lin = 40E9;
-        E_se = 0.08*40E9;
+        E_se = 0.08*(40e9);
         
         % Kinematic properties
         transformation = []; % contains every intermediate transform
@@ -22,7 +22,7 @@ classdef Wrist < handle
         theta = zeros(6,1); % [rad] bending angle for each notch
         alpha = 0 % [rad] Base rotation
         tau = 0; % [m] Base translation
-        force = 0; % [N] Force on the wire
+        F = 0; % [N] Force on the wire
         delta_l = 0; % [m] Tendon displacement
         ybar = zeros(6,1);
         I = zeros(6,1);
@@ -93,7 +93,7 @@ classdef Wrist < handle
             obj.tau = q(3);
             switch(type)
                 case 'force'
-                    obj.force = q(1);
+                    obj.F = q(1);
                     obj.get_force_arc_params();
                 case 'geometry'
                     disp("geometry")
@@ -106,7 +106,6 @@ classdef Wrist < handle
         
         function [path,T,obj] = robot_kin(obj)
             %ROBOT_KIN - returns the forward kinematics of a notched wrist
-            disp("Running robot Kin")
             % Initial frame and translation section
             obj.transformation = zeros(4,4,2*(obj.n+1));
             % Plotting multiple frames from multiple sections of tube
@@ -235,11 +234,9 @@ classdef Wrist < handle
             obj.s = s;
         end
         
-        function obj = get_force_arc_params(obj)
-            theta_vec_base = deg2rad(0)*ones(obj.n,1); % this represents the precurvature in each notch
-            
+        function obj = get_force_arc_params(obj)            
             % INITIALIZATION OF VECTORS %
-            obj.theta = theta_vec_base; % vector of each notch angle which should start at precurve value
+            obj.theta = zeros(obj.n,1); % vector of each notch angle which should start at precurve value
             F_vec = zeros(obj.n,1); % vector of force experienced by each notch
             M_vec = zeros(obj.n,1); % vector of moment experienced by each notch
             E_vec = obj.E_lin*ones(obj.n,1); % effective elastic modulus for each notch
@@ -252,11 +249,11 @@ classdef Wrist < handle
             maxTrials = 10; % maximum number of trials to perform
             while theta_delta > 1E-6 && trials < maxTrials
                 for ii = 1:obj.n
-                    obj.check_notch_limits();
+%                     obj.check_notch_limits();
+                    E_vec(ii) = obj.E_lin;
                     % Compute distal force and moment
-                    F_vec(ii) = F*exp(-mu*sum(obj.theta(1:ii))); % get force experienced by notch
+                    F_vec(ii) = obj.F*exp(-mu*sum(obj.theta(1:ii))); % get force experienced by notch
                     M_vec(ii) = F_vec(ii)*(obj.ybar(ii) + obj.ID/2); % get moment experienced by notch
-                    obj.theta(ii) = M_vec(ii)*obj.h(ii)/(E_vec(ii)*obj.I(ii)); % update theta
                     
                     pct = 100;
                     k = 1;
@@ -266,10 +263,10 @@ classdef Wrist < handle
                         % Compute angular deflection of current segment
                         obj.theta(ii) = M_vec(ii)*obj.h(ii)/(E_vec(ii)*obj.I(ii));
                         
-                        obj.check_notch_limits();
+                        obj.check_notch_limits(ii);
                         % Compute section arc length, curvature and
                         % strain
-                        s1 = (obj.h(ii)-obj.ybar(ii))*abs(obj.theta(ii));
+                        s1 = obj.h(ii)-(obj.ybar(ii))*abs(obj.theta(ii));
                         obj.kappa(ii) = obj.theta(ii)/s1;
                         epsilon = (obj.kappa(ii).*(obj.OD/2-obj.ybar(ii)))./(1+obj.ybar(ii)*obj.kappa(ii));
                         
@@ -289,21 +286,17 @@ classdef Wrist < handle
                     end
                     
                 end
-                obj.theta = obj.theta + theta_vec_base; % add offset for precurvature
                 theta_delta = sum(obj.theta)-sum(theta_last);
-                theta_last = obj.theta;
+%                 theta_last = obj.theta;
                 trials = trials + 1; % increment
             end
         end
         
-        function obj = check_notch_limits(obj)
+        function obj = check_notch_limits(obj,index)
         %CHECK_NOTCH_LIMITS - makes sure the notches aren't closing past
         %what they should do based on geometry.
-            for i = 1:obj.n
-                theta_max = obj.h(i)/(obj.OD/2 + obj.ybar(i));
-                if obj.theta(i) > theta_max
-                    obj.theta(i) = theta_max;
-                end
+            if obj.theta(index) >= 0 && (obj.h(index)/(obj.OD/2 + obj.ybar(index)) <= obj.theta(index))
+                obj.theta(index) = obj.h(index)/(obj.OD/2 + obj.ybar(index));
             end
         end
         
@@ -321,29 +314,29 @@ classdef Wrist < handle
             end
         end
         
-        function [stress,eta] = get_stress(strain)
+        function [stress,eta,obj] = get_stress(obj,strain)
             % GETSTRESS - returns the stress of a single notch based on stress strain
             % curve of nitinol
             strain_lower = 0.02;
             strain_upper = 0.1;
             
-            sigma = @(e) (e < strain_lower).*obj.E_lin*e + ...
-                (e >= strain_lower && e < strain_upper).*(obj.E_se*(e - strain_lower) + strain_lower*obj.E_lin)+...
+            sigma = @(e) (e < strain_lower).*e*obj.E_lin + ...
+                (e >= strain_lower && e < strain_upper).*((e - strain_lower)*.08*obj.E_lin + strain_lower*obj.E_lin)+...
                 (e >= strain_upper)*((1.0E9)*exp(-.01/(e-strain_upper))+strain_upper*1*obj.E_lin+(strain_upper-strain_lower)*obj.E_se);
             stress = abs(sigma(strain));
             eta_fun = @(e) (e<strain_lower).*.5+...
-                (e >= strain_lower && e < strain_upper)*1+...
-                (e >= strain_upper)*0.3;
+                (e >= strain_lower && e < strain_upper).*1+...
+                (e >= strain_upper).*0.3;
             eta = eta_fun(strain);
         end
         
         function maxL = calcMaxL(obj)
             %CALCMAXL - determines the maximum tendon displacement before
             %8 percent strain is experienced by the notch
-            ybar = obj.get_neutral_axis(1);
+            obj.get_neutral_axis();
             maxStrain = 0.08;
-            kappa = maxStrain/(obj.OD/2 - ybar*(1 + maxStrain));
-            maxL = (kappa*obj.h(1)*(obj.ID/2 + ybar)/(1 + ybar*kappa));
+            k = maxStrain/(obj.OD/2 - obj.ybar(1)*(1 + maxStrain));
+            maxL = (k*obj.h(1)*(obj.ID/2 + obj.ybar(1))/(1 + obj.ybar(1)*k));
         end
         
         function obj = plot_stick_model(obj)

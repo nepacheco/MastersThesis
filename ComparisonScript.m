@@ -16,7 +16,7 @@ E_lin = 40E9; % [N/m^2] - Elastic Modulus of Nitinol
 E_se = 0.08*E_lin; % [N/m^2] - Slope of Super Elastic Region for Nitinol
 mu = 0.2; % coefficient of friction for capstan
 
-wrist = Wrist(od,id,n,h,phi,c,g,'CutType','on-axis'); % Nick's wrist class
+wrist = Wrist(od,id,n,h,phi,c,g,'CutType','off-axis'); % Nick's wrist class
 
 T_0 = eye(4,4);
 b = c(1);    
@@ -29,29 +29,36 @@ sheath.ConstructWrist('T_0',T_0,'g',g,'c',c,'b',b,'h',h,'h_c',h,...
 
 % **** PLOTTING NOTCH ANGLE WRT FORCE **********
 sheath.FindMaxForce(1,5);
-des_points = zeros(n,2);
 theta_last = zeros(n,1);
 points = 100; % how many points to plot
-theta_mat = zeros(n,points); % Initializing empty array to store values
+diff_values = zeros(n+1,points);
+theta_mat_sheath = zeros(n,points); % Initializing empty array to store values
+theta_mat_wrist = zeros(n,points);
 F = linspace(0,sheath.F_max,points); % Getting list of forces (x axis values)
 for i = 1:points
     sheath.GetKinematicsForce(F(i)); % Updating tube position
-    theta_mat(:,i) = sheath.theta; % Getting tube position
-    
-    % *** DATA COLLECTION TO SEE IF WE CROSSED DESIRED ANGLE VALUE ***
-    diff = (theta_last-theta_des') .* (sheath.theta-theta_des'); 
-    for k = 1:n % check each notch individually
-        if diff(k) <= 0 % We have crosed over the desired angle
-            % Grab the point that was closest to the desired angle
-            if abs(theta_last(k)-theta_des(k)) < abs(sheath.theta(k) - theta_des(k))
-                des_points(k,1) = F(i-1);
-                des_points(k,2) = rad2deg(theta_last(k));
-            else
-                des_points(k,1) = F(i);
-                des_points(k,2) = rad2deg(sheath.theta(k));
-            end
-        end
+    theta_mat_sheath(:,i) = sheath.theta; % Getting tube position
+    wrist.fwkin([F(i),0,0],'Type','force');
+    theta_mat_wrist(:,i) = wrist.theta;
+    if (norm(wrist.theta-sheath.theta) > 1E-4)
+        diff_values(:,i) = [wrist.theta-sheath.theta; F(i)];
     end
-    theta_last = sheath.theta;
-    % ****************************************************************
 end
+
+for i = 1:n
+    subplot(2,3,i);
+    title(sprintf("Notch %d comparison",i));
+    hold on
+    plot(F,theta_mat_sheath(i,:));
+    plot(F,theta_mat_wrist(i,:));
+    legend('Josh Model','Nick Model');
+    grid on
+    hold off
+end
+
+disp(diff_values)
+
+% If results look good move on to next section
+
+%% Comparing Test Results to Wrist Model
+wrist = Wrist(od,id,n,h,phi,c,g,'CutType','on-axis'); % Nick's wrist class
