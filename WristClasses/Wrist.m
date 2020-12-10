@@ -274,7 +274,10 @@ classdef Wrist < handle
                         % Compute angular deflection of current segment
                         obj.theta(ii) = M_vec(ii)*obj.h(ii)/(E_vec(ii)*obj.I(ii));
                         
+                        % Check to see if notch angle closes the notch, and
+                        % if so, limit the notch angle                        
                         obj.check_notch_limits(ii);
+                        
                         % Compute section arc length, curvature and
                         % strain
                         s1 = obj.h(ii)-(obj.ybar(ii))*abs(obj.theta(ii));
@@ -340,7 +343,7 @@ classdef Wrist < handle
             
             sigma = @(e) (e < strain_lower).*e*obj.E_lin + ...
                 (e >= strain_lower && e < strain_upper).*((e - strain_lower)*.08*obj.E_lin + strain_lower*obj.E_lin)+...
-                (e >= strain_upper)*((1.0E9)*exp(-.01/(e-strain_upper))+strain_upper*1*obj.E_lin+(strain_upper-strain_lower)*obj.E_se);
+                (e >= strain_upper)*((1.0E9)*exp(-.01/(e-strain_upper))+strain_lower*1*obj.E_lin+(strain_upper-strain_lower)*obj.E_se);
             stress = abs(sigma(strain));
             eta_fun = @(e) (e<strain_lower).*.5+...
                 (e >= strain_lower && e < strain_upper).*1+...
