@@ -174,25 +174,23 @@ classdef Wrist < handle
                 switch(obj.cutType)
                     case 'off-axis'
                         % Assumes we are cutting between center of tube and inner radius
-                        phi_o = 2*acos((obj.g(index) - ro)/ro);
-                        phi_i = 2*acos((obj.g(index) - ro)/ri);
+                        alpha_out=acos((obj.g(index)-ro)/ro);
+                        ybar_out=(2*ro/3)*(sin(alpha_out)^3)/(alpha_out-sin(alpha_out)*cos(alpha_out));
+                        A_seg_out=(ro^2)*(alpha_out-sin(alpha_out)*cos(alpha_out));
+                        Jz_oo=(ro^4)/4*(alpha_out-sin(alpha_out)*cos(alpha_out)+2*sin(alpha_out)^3*cos(alpha_out));
                         
-                        % Equations from Swaney and York
-                        A_o = (ro^2)*(phi_o-sin(phi_o))/2;
-                        A_i = (ri^2)*(phi_i-sin(phi_i))/2;
-                        ybar_o = 4*ro*sin(1/2*phi_o)^3/(3*(phi_o - sin(phi_o)));
-                        ybar_i = 4*ri*sin(1/2*phi_i)^3/(3*(phi_i - sin(phi_i)));
-                        obj.ybar(index) = (ybar_o*A_o - ybar_i*A_i)/(A_o - A_i);
+                        % Inner Circular Segment
+                        alpha_in=acos((obj.g(index)-ro)/ri);
+                        ybar_in=(2*ri/3)*(sin(alpha_in)^3)/(alpha_in-sin(alpha_in)*cos(alpha_in));
+                        A_seg_in=(ri^2)*(alpha_in-sin(alpha_in)*cos(alpha_in));
+                        Jz_oi=(ri^4)/4*(alpha_in-sin(alpha_in)*cos(alpha_in)+2*sin(alpha_in)^3*cos(alpha_in));
                         
-                        % using Circular segment for outer and inner regions of tube
-                        I_o = (phi_o - sin(phi_o) + 2*sin(phi_o)*sin(phi_o/2)^2)*ro^4/8;
-                        I_i = (phi_i - sin(phi_i) + 2*sin(phi_i)*sin(phi_i/2)^2)*ri^4/8;
-                        % subtract inner from outer to determine area moment of inertia for cut
-                        % section only
-                        Io = I_o - I_i;
-                        % Use parallel axis theorem to shift the area moment of inertia to centroid
-                        % of the notch
-                        obj.I(index) = Io - (A_o - A_i)*obj.ybar(index)^2;
+                        A_seg=A_seg_out-A_seg_in;
+                        Jz_o=Jz_oo-Jz_oi;
+                        
+                        % ybar and Jz
+                        obj.ybar(index)=(ybar_out*A_seg_out-ybar_in*A_seg_in)/A_seg;
+                        obj.I(index)=Jz_o-A_seg*obj.ybar(index)^2;
                     case 'on-axis'
                         phi_o = 2*acos((obj.g(index) - (obj.OD/2))/(obj.OD/2));
                         
@@ -265,7 +263,7 @@ classdef Wrist < handle
                     % Compute distal force and moment
                     F_vec(ii) = obj.F*exp(-mu*sum(obj.theta(1:ii))); % get force experienced by notch
                     M_vec(ii) = F_vec(ii)*(obj.ybar(ii) + obj.ID/2); % get moment experienced by notch
-
+                    
                     pct = 100;
                     k = 1;
                     % Gradient descent for non-linear modulus
@@ -275,7 +273,7 @@ classdef Wrist < handle
                         obj.theta(ii) = M_vec(ii)*obj.h(ii)/(E_vec(ii)*obj.I(ii));
                         
                         % Check to see if notch angle closes the notch, and
-                        % if so, limit the notch angle                        
+                        % if so, limit the notch angle
                         obj.check_notch_limits(ii);
                         
                         % Compute section arc length, curvature and
@@ -296,8 +294,8 @@ classdef Wrist < handle
                         E_vec(ii) = new_E;
                         
                         if(obj.DEBUG)
-                          debug_vec = [trials, k, s1, obj.kappa(ii), epsilon, stress_eff, eta, new_E];
-                          debug_mat = [debug_mat; debug_vec];
+                            debug_vec = [trials, k, s1, obj.kappa(ii), epsilon, stress_eff, eta, new_E];
+                            debug_mat = [debug_mat; debug_vec];
                         end
                         % Increment
                         k = k+1;
@@ -305,7 +303,7 @@ classdef Wrist < handle
                     obj.theta = obj.theta + obj.precurve_theta;
                 end
                 theta_delta = sum(obj.theta)-sum(theta_last);
-%                 theta_last = obj.theta;
+                %                 theta_last = obj.theta;
                 trials = trials + 1; % increment
             end
             if (obj.DEBUG)
@@ -341,9 +339,9 @@ classdef Wrist < handle
             strain_lower = 0.02;
             strain_upper = 0.1;
             
-            sigma = @(e) (e < strain_lower).*e*obj.E_lin + ...
-                (e >= strain_lower && e < strain_upper).*((e - strain_lower)*.08*obj.E_lin + strain_lower*obj.E_lin)+...
-                (e >= strain_upper)*((1.0E9)*exp(-.01/(e-strain_upper))+strain_lower*1*obj.E_lin+(strain_upper-strain_lower)*obj.E_se);
+            sigma = @(e) (e<strain_lower).*e*obj.E_lin+...
+                (e >= strain_lower && e < strain_upper)*((e-strain_lower)*.08*obj.E_lin+strain_lower*obj.E_lin)+...
+                (e >= strain_upper)*((1.0E9)*exp(-.01/(e-strain_upper))+strain_lower*1*obj.E_lin+(strain_upper-strain_lower)*.08*obj.E_lin);
             stress = abs(sigma(strain));
             eta_fun = @(e) (e<strain_lower).*.5+...
                 (e >= strain_lower && e < strain_upper).*1+...
