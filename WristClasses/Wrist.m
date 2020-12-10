@@ -241,7 +241,7 @@ classdef Wrist < handle
         
         function obj = get_force_arc_params(obj)
             % INITIALIZATION OF VECTORS %
-            obj.theta = obj.precurve_theta; % vector of each notch angle which should start at precurve value
+            obj.theta = zeros(obj.n,1); % vector of each notch angle which should start at precurve value
             F_vec = zeros(obj.n,1); % vector of force experienced by each notch
             M_vec = zeros(obj.n,1); % vector of moment experienced by each notch
             E_vec = obj.E_lin*ones(obj.n,1); % effective elastic modulus for each notch
@@ -285,6 +285,9 @@ classdef Wrist < handle
                         % Update modulus via gradient descent
                         [stress_eff,eta] = obj.get_stress(abs(epsilon));
                         new_E = E_vec(ii)-eta*(E_vec(ii)-stress_eff/abs(epsilon));
+                        if isnan(new_E)
+                            new_E = E_vec(ii);
+                        end
                         
                         % Percent change in modulus (for convergence
                         % checking)

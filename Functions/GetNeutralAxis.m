@@ -23,24 +23,48 @@ switch(cutType)
         % Assumes we are cutting between center of tube and inner radius
         phi_o = 2*acos((g - ro)/ro);
         phi_i = 2*acos((g - ro)/ri);
+        alpha_in = phi_i/2;
+        alpha_out = phi_o/2;
         
         % Equations from Swaney and York
         A_o = (ro^2)*(phi_o-sin(phi_o))/2;
+        A_seg_out=(ro^2)*(alpha_out-sin(alpha_out)*cos(alpha_out));
+        A_o_diff = A_o - A_seg_out;
+        
         A_i = (ri^2)*(phi_i-sin(phi_i))/2;
+        A_seg_in=(ri^2)*(alpha_in-sin(alpha_in)*cos(alpha_in));
+        A_idiff = A_i - A_seg_in;
+        
         ybar_o = 4*ro*sin(1/2*phi_o)^3/(3*(phi_o - sin(phi_o)));
+        ybar_out=(2*ro/3)*(sin(alpha_out)^3)/(alpha_out-sin(alpha_out)*cos(alpha_out));
+        ybar_o_diff = ybar_o - ybar_out;
+        
         ybar_i = 4*ri*sin(1/2*phi_i)^3/(3*(phi_i - sin(phi_i)));
-        ybar = (ybar_o*A_o - ybar_i*A_i)/(A_o - A_i);
-        (A_o - A_i);
+        ybar_in=(2*ri/3)*(sin(alpha_in)^3)/(alpha_in-sin(alpha_in)*cos(alpha_in));
+        ybar_i_diff = ybar_i - ybar_in;
+        
+%         ybar = (ybar_o*A_o - ybar_i*A_i)/(A_o - A_i);
+        A_seg=A_seg_out-A_seg_in;
+        
         
         % using Circular segment for outer and inner regions of tube
         I_o = (phi_o - sin(phi_o) + 2*sin(phi_o)*sin(phi_o/2)^2)*ro^4/8;
+        Jz_oo=(ro^4)/4*(alpha_out-sin(alpha_out)*cos(alpha_out)+2*sin(alpha_out)^3*cos(alpha_out));
+        I_o_diff = I_o - Jz_oo;
+        
         I_i = (phi_i - sin(phi_i) + 2*sin(phi_i)*sin(phi_i/2)^2)*ri^4/8;
+        Jz_oi=(ri^4)/4*(alpha_in-sin(alpha_in)*cos(alpha_in)+2*sin(alpha_in)^3*cos(alpha_in));
+        I_i_diff = I_i - Jz_oi;
         % subtract inner from outer to determine area moment of inertia for cut
         % section only
         Io = I_o - I_i;
+        Io_diff = Io - (Jz_oo - Jz_oi);
+        Jz_o=Jz_oo-Jz_oi;
         % Use parallel axis theorem to shift the area moment of inertia to centroid
         % of the notch
-        I = Io - (A_o - A_i)*ybar^2;
+        ybar = (ybar_out*A_seg_out-ybar_in*A_seg_in)/A_seg;
+%         I = Io - (A_o - A_i)*ybar^2;
+        I = Jz_o-A_seg*ybar^2;
     case 'on-axis'
         phi = 2*acos((g - ro)/ro);
 

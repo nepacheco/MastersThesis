@@ -25,13 +25,12 @@ sheath = JoshWrist();
 sheath.ConstructWrist('T_0',T_0,'g',g,'c',c,'b',b,'h',h,'h_c',h,...
     'r_o',od/2,'r_i',id/2,'n',n,'material','nitinol','plotkin',false,'verbose',false);
 % **** PLOTTING NOTCH ANGLE WRT FORCE **********
-sheath.FindMaxForce(1,5);
 theta_last = zeros(n,1);
 points = 100; % how many points to plot
 diff_values = zeros(n+1,points);
 theta_mat_sheath = zeros(n,points); % Initializing empty array to store values
 theta_mat_wrist = zeros(n,points);
-F = linspace(0,sheath.F_max,points); % Getting list of forces (x axis values)
+F = linspace(0,5.5,points); % Getting list of forces (x axis values)
 for i = 1:points
     sheath.GetKinematicsForce(F(i)); % Updating tube position
     theta_mat_sheath(:,i) = sheath.theta; % Getting tube position
@@ -53,24 +52,23 @@ for i = 1:n
     hold off
 end
 
-disp(diff_values)
+disp(sqrt(mean((diff_values(1:5,:).^2)')))
 
-%% Comparison of single force spot with both models
-F = 1.15;
-wrist = Wrist(od,id,n,h,phi,c,g,'CutType','off-axis'); % Nick's wrist class
-sheath = JoshWrist();
-sheath.ConstructWrist('T_0',T_0,'g',g,'c',c,'b',b,'h',h,'h_c',h,...
-    'r_o',od/2,'r_i',id/2,'n',n,'material','nitinol','plotkin',false,'verbose',false);
-sheath.GetKinematicsForce(F); % Updating tube position
-disp("MY MODEL")
-wrist.fwkin([F,0,0],'Type','force');
-
-diff = wrist.theta - sheath.theta
-
-wrist_fwkin = readmatrix("wrist_fwkin.csv");
-josh_fwkin = readmatrix("josh_fwkin.csv");
-
-% If results look good move on to next section
+points = 10000;
+strain = linspace(0,.12,points);
+my_func = zeros(points,2);
+josh_func = zeros(points,2);
+for i = 1:points
+    [my_func(i,1),my_func(i,2)] = wrist.get_stress(strain(i));
+    [josh_func(i,1), josh_func(i,2)] = sheath.SuperElastic(strain(i));
+    if isnan(my_func(i,1)) && isnan(josh_func(i,1))
+        my_func(i,1) = my_func(i-1,1);
+        josh_func(i,1) = josh_func(i-1,1);
+    end
+    
+end
+diff_mat = my_func - josh_func;
+mean(diff_mat)
 
 %% Comparing Test Results to Wrist Model
 wrist = Wrist(od,id,n,h,phi,c,g,'CutType','on-axis'); % Nick's wrist class
