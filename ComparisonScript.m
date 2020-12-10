@@ -105,9 +105,8 @@ mse = mean(diff')';
 rmse = sqrt(mse);
 
 % Plotting
-figure(2)
 for i = 1:n+1
-    subplot(2,3,i);
+    subplot(3,2,i);
     if i < n+1
         title(sprintf("Notch %d Experimental Results",i),'FontSize',16);
         hold on
@@ -117,15 +116,17 @@ for i = 1:n+1
         legend("Experiment","Model",'Location','southeast','FontSize',12)
         xlabel("Force (N)",'FontSize',14);
         ylabel("Notch Deflection (deg)",'FontSize',14)
+        set(gca,'FontSize',12)
         grid on
     else
-        title(sprintf("Total Deflection Experimental Results"),'FontSize',16);
+        title(sprintf("Total Deflection Experimental Results"),'FontSize',18);
         hold on
         scatter(force,sum(notch_matrix(:,:)));
         plot(F,rad2deg(sum(theta_mat_force(:,:))));
-        legend("Experiment","Model",'Location','southeast','FontSize',12)
-        xlabel("Force (N)",'FontSize',14);
-        ylabel("Tip Deflection (deg)",'FontSize',14)
+        legend("Experiment","Model",'Location','southeast','FontSize',14)
+        xlabel("Force (N)",'FontSize',16);
+        ylabel("Tip Deflection (deg)",'FontSize',16)
+        set(gca,'FontSize',14)
         grid on
     end
     hold off
