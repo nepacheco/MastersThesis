@@ -92,19 +92,6 @@ for i = 1:points
     theta_mat_force(:,i) = wrist.theta;
 end
 
-theta_max = n*h(1)/(wrist.OD/2 + wrist.ybar(1));
-kappa_max = theta_max/(h(1) - wrist.ybar(1)*theta_max);
-beta = h(1)*(wrist.ID/2 + wrist.ybar(1));
-delta_l_max = kappa_max*beta/(1 + wrist.ybar(1)*kappa_max);
-
-
-delta_l = linspace(0,delta_l_max,points);
-theta_mat_geom = zeros(n,points);
-for i = 1:points
-    wrist.fwkin([delta_l(i),0,0],'Type','geometry');
-    theta_mat_geom(:,i) = wrist.theta;
-end
-
 % Generating RMSE
 diff = zeros(n+1,length(force_vec2));
 for i = 1:length(force_vec2)
@@ -146,42 +133,11 @@ for i = 1:n+1
     hold off
 end
 
-% Plotting tendon displacement
-figure
-for i = 1:n+1
-    subplot(3,2,i);
-    if i < n+1
-        title(sprintf("Notch %d Experimental Results",i),'FontSize',16);
-        hold on
-        scatter(tendon_vec1./1000,notch_mat1(:,i),'bo');
-        scatter(tendon_vec2./1000,notch_mat2(:,i),'rx');
-        plot(delta_l,rad2deg(theta_mat_geom(i,:)),'g','Linewidth',2);
-        legend("Experiment1","Experiment2","Swaney and York Model",'Location','southeast','FontSize',12)
-        xlabel("Tendon Displacement (mm)",'FontSize',14);
-        ylabel("Notch Deflection (deg)",'FontSize',14)
-        set(gca,'FontSize',12)
-        grid on
-    else
-        title(sprintf("Total Deflection Experimental Results"),'FontSize',18);
-        hold on
-        scatter(tendon_vec1./1000,notch_mat1(:,i),'bo');
-        scatter(tendon_vec2./1000,notch_mat2(:,i),'rx');
-        plot(delta_l,rad2deg(sum(theta_mat_geom(:,:))),'g','Linewidth',2);
-        legend("Experiment1","Experiment2","Swaney and York Model",'Location','southeast','FontSize',14)
-        xlabel("Tendon Displacement (mm)",'FontSize',16);
-        ylabel("Tip Deflection (deg)",'FontSize',16)
-        set(gca,'FontSize',14)
-        grid on
-    end
-    hold off
-end
 
 %% Functions
-function [force_vec,tendon_vec, notch_mat] = parseFile(file,n)
+function [force_vec, notch_mat] = parseFile(file,n)
 %PARSEFILE - parses the NxM cell passed into a force vector and notch value
 %matrix
-tendon_index = 3;
-tendon_vec = [];
 force_index = 4;
 force_vec = [];
 notch1_index = 5;
@@ -189,7 +145,6 @@ notch_mat = [];
 [N,M] = size(file);
 for i = 1:N
     if (isnumeric(file{i,force_index}) && isnumeric(file{i,notch1_index}))
-        tendon_vec = [tendon_vec; file{i,tendon_index}];
         force_vec = [force_vec; file{i,force_index}];
         notch_mat = [notch_mat; file{i,notch1_index:notch1_index+n}];
     end
