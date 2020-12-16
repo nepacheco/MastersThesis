@@ -61,13 +61,19 @@ josh_func = zeros(points,2);
 for i = 1:points
     [my_func(i,1),my_func(i,2)] = wrist.get_stress(strain(i));
     [josh_func(i,1), josh_func(i,2)] = sheath.SuperElastic(strain(i));
-    if isnan(my_func(i,1)) && isnan(josh_func(i,1))
+    if isnan(my_func(i,1)) || isnan(josh_func(i,1))
         my_func(i,1) = my_func(i-1,1);
         josh_func(i,1) = josh_func(i-1,1);
     end
     
 end
 diff_mat = my_func - josh_func;
+for i = 1:points
+    if diff_mat(i,1) ~= 0
+        disp(i)
+        break;
+    end
+end
 mean(diff_mat)
 
 %% Comparing Test Results to Wrist Model

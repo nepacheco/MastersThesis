@@ -12,7 +12,10 @@ classdef Wrist < handle
         c = 1.0E-3.*ones(6,1);        % vector containing notch spacing parameters
         g = 1.45E-3.*ones(6,1);         % vector containing tube notch height
         E_lin = 40E9;
-        E_se = 0.08*(40e9);
+        E_se = 0.08*(40E9);
+        strain_lower = 0.02;
+        strain_upper = 0.1;
+        mu = 0.2;
         
         % Kinematic properties
         transformation = []; % contains every intermediate transform
@@ -245,7 +248,6 @@ classdef Wrist < handle
             F_vec = zeros(obj.n,1); % vector of force experienced by each notch
             M_vec = zeros(obj.n,1); % vector of moment experienced by each notch
             E_vec = obj.E_lin*ones(obj.n,1); % effective elastic modulus for each notch
-            mu = 0.2;
             
             if (obj.DEBUG)
                 debug_mat = [];
@@ -261,7 +263,7 @@ classdef Wrist < handle
                     %                     obj.check_notch_limits();
                     E_vec(ii) = obj.E_lin;
                     % Compute distal force and moment
-                    F_vec(ii) = obj.F*exp(-mu*sum(obj.theta(1:ii))); % get force experienced by notch
+                    F_vec(ii) = obj.F*exp(-obj.mu*sum(obj.theta(1:ii))); % get force experienced by notch
                     M_vec(ii) = F_vec(ii)*(obj.ybar(ii) + obj.ID/2); % get moment experienced by notch
                     
                     pct = 100;
@@ -339,16 +341,15 @@ classdef Wrist < handle
         function [stress,eta,obj] = get_stress(obj,strain)
             % GETSTRESS - returns the stress of a single notch based on stress strain
             % curve of nitinol
-            strain_lower = 0.02;
-            strain_upper = 0.1;
             
-            sigma = @(e) (e<strain_lower).*e*obj.E_lin+...
-                (e >= strain_lower && e < strain_upper)*((e-strain_lower)*.08*obj.E_lin+strain_lower*obj.E_lin)+...
-                (e >= strain_upper)*((1.0E9)*exp(-.01/(e-strain_upper))+strain_lower*1*obj.E_lin+(strain_upper-strain_lower)*.08*obj.E_lin);
+            sigma = @(e) (e<obj.strain_lower).*e*obj.E_lin+...
+                (e >= obj.strain_lower && e < obj.strain_upper)*((e-obj.strain_lower)*obj.E_se+obj.strain_lower*obj.E_lin)+...
+                (e >= obj.strain_upper)*((1.0E9)*exp(-.01/(e-obj.strain_upper))+obj.strain_lower*1*obj.E_lin+(obj.strain_upper-obj.strain_lower)*obj.E_se);
             stress = abs(sigma(strain));
-            eta_fun = @(e) (e<strain_lower).*.5+...
-                (e >= strain_lower && e < strain_upper).*1+...
-                (e >= strain_upper).*0.3;
+            eta_fun = @(e) (e<obj.strain_lower).*.5+...
+                (e >= obj.strain_lower && e < obj.strain_upper).*1+...
+                (e >= obj.strain_upper).*0.3;
+           
             eta = eta_fun(strain);
         end
         
