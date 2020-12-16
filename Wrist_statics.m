@@ -59,27 +59,27 @@ for i = 1:1
     % 87.63	4.617639811
     % 100.65	4.934550852];
     
-    DATA = [5.9	0.004154105
-        11	0.357560665
-        15.4	0.776502946
-        22.9	1.20881778
-        28.8	1.622529453
-        35.3	1.947777032
-        45	2.220738834
-        55	2.409689019
-        65.6	2.541027722
-        75.1	2.66422041
-        85.1	2.816352783
-        95.1	2.949542383
-        105.6	3.118125643
-        114.9	3.247102412
-        122.9	3.405919401
-        131.6	3.632075577
-        137.7	3.880093348
-        143.7	4.202531803];
+%     DATA = [5.9	0.004154105
+%         11	0.357560665
+%         15.4	0.776502946
+%         22.9	1.20881778
+%         28.8	1.622529453
+%         35.3	1.947777032
+%         45	2.220738834
+%         55	2.409689019
+%         65.6	2.541027722
+%         75.1	2.66422041
+%         85.1	2.816352783
+%         95.1	2.949542383
+%         105.6	3.118125643
+%         114.9	3.247102412
+%         122.9	3.405919401
+%         131.6	3.632075577
+%         137.7	3.880093348
+%         143.7	4.202531803];
     
     theta_history = deg2rad(DATA(:,1) - DATA(1,1)); %account for initial offset.
-    theta_history = rad2deg(theta_history); %convert to degrees
+    theta_history = DATA(:,1); %convert to degrees
     T_history = DATA(:,2);                          %get tendon force history
     
     %% Calculations
@@ -154,7 +154,7 @@ for i = 1:1
     
     
     %% Plot force vs. bending angle for the wrist.
-    %figure(3)
+    figure(3)
     hold on
     grid on
     xlabel('\theta'); ylabel('F');
@@ -163,10 +163,11 @@ for i = 1:1
     %We assume each cutout undergoes the same amount of bending.
     Ftheta = arrayfun(F,theta); %generate force required to bend each cutout by theta.
     %plot(theta*n,Ftheta,'LineWidth',3,'Color',(1/256)*[255 128 0]); %plot the model - radians
-    plot(theta*n*180/pi,Ftheta,'LineWidth',3,'Color',(1/256)*[255 128 0]); %plot the model - degrees
-    plot(theta_history,T_history,'.','MarkerSize',20,'Color',(1/256)*[96 96 96]);
+    plot(Ftheta,theta*n*180/pi,'LineWidth',3,'Color',(1/256)*[255 128 0]); %plot the model - degrees
+    plot(F_vec,rad2deg(sum(theta_mat_force(:,:))),'Color','g','LineWidth',3);
+    plot(T_history,theta_history,'.','MarkerSize',20,'Color',(1/256)*[96 96 96]);
     %plot the experimental data
-    legend('Model','Experimental','Location','NorthWest')
+    legend('Swaney Model','Josh Model','Experimental','Location','NorthWest')
     res = get(0,'ScreenSize');
     
     max_strain = [max_strain (ro-ybar)/(ro+ybar)];
