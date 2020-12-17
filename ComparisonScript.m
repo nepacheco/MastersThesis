@@ -102,23 +102,23 @@ end
 diff = zeros(n+1,length(force_vec2));
 for i = 1:length(force_vec2)
     input = force_vec2(i);
-    wrist.fwkin([F_vec(i),0,0],'Type','force');
+    wrist.fwkin([input,0,0],'Type','force');
     diff(:,i) = notch_mat2(i,:)' -...
-        [wrist.theta; sum(wrist.theta)];
+        rad2deg([wrist.theta; sum(wrist.theta)]);
 end
 se = diff.^2;
-mse = mean(diff')';
+mse = mean(se,2);
 rmse = sqrt(mse)
 
 diff = zeros(n+1,length(force_vec1));
 for i = 1:length(force_vec1)
     input = force_vec1(i);
-    wrist.fwkin([F_vec(i),0,0],'Type','force');
+    wrist.fwkin([input,0,0],'Type','force');
     diff(:,i) = notch_mat1(i,:)' -...
-        [wrist.theta; sum(wrist.theta)];
+        rad2deg([wrist.theta; sum(wrist.theta)]);
 end
 se = diff.^2;
-mse = mean(diff')';
+mse = mean(se,2);
 rmse = sqrt(mse)
 
 % Plotting Force 
