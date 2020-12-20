@@ -9,7 +9,7 @@ od = 1.62E-3; % [m] - outer diameter of tube
 id = 1.4E-3; % [m] - inner diameter of tube
 n = 5; % number of notches
 phi = zeros(n,1);
-g = 1.46E-3*ones(n,1); % Diagrma sent by Pulse might be 1.45 [m] - Max depth which we assign to notch n.
+g = 1.4E-3*ones(n,1); % Diagrma sent by Pulse might be 1.45 [m] - Max depth which we assign to notch n.
 h = 0.8E-3*ones(n,1);
 c = 2.2E-3*ones(n,1);
 E_lin = 40E9; % [N/m^2] - Elastic Modulus of Nitinol
@@ -20,7 +20,7 @@ b = c(1);
 
 
 %% Comparing my Wrist Class to Josh's
-wrist = Wrist(od,id,n,h,phi,c,g,'CutType','off-axis'); % Nick's wrist class
+wrist = Wrist(od,id,n,h,phi,c,g,'CutType','on-axis'); % Nick's wrist class
 sheath = JoshWrist();
 sheath.ConstructWrist('T_0',T_0,'g',g,'c',c,'b',b,'h',h,'h_c',h,...
     'r_o',od/2,'r_i',id/2,'n',n,'material','nitinol','plotkin',false,'verbose',false);
@@ -52,7 +52,7 @@ for i = 1:n
     hold off
 end
 
-disp(sqrt(mean((diff_values(1:5,:).^2)')))
+fprintf("Notch difference between josh and my wrist class: %g\n",sqrt(mean((diff_values(1:5,:).^2)')));
 
 points = 10000;
 strain = linspace(0,.12,points);
@@ -68,13 +68,7 @@ for i = 1:points
     
 end
 diff_mat = my_func - josh_func;
-for i = 1:points
-    if diff_mat(i,1) ~= 0
-        disp(i)
-        break;
-    end
-end
-mean(diff_mat)
+fprintf("Difference in stress: %f, and eta: %f\n",mean(diff_mat));
 
 %% Comparing Test Results to Wrist Model
 close all
@@ -124,7 +118,7 @@ rmse = sqrt(mse)
 % Plotting Force 
 figure(2)
 for i = 1:n+1
-    subplot(3,2,i);
+    subplot(2,3,i);
     if i < n+1
         title(sprintf("Notch %d Experimental Results",i),'FontSize',16);
         hold on
