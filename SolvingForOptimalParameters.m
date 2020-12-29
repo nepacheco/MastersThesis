@@ -31,10 +31,10 @@ file1 = readcell(file_path1,opts);
 % [force_vec1,notch_mat1] = parseFile(file1,n);
 tic
 min_norm_rmse = [100 0 0 0 0];
-for E_lin = linspace(15E9,35E9,5)
+for E_lin = linspace(10E9,40E9,5)
     for strain_lower = linspace(0.010,0.030,5)
-        for scale = linspace(0.15,0.35,5)
-            for mu = linspace(0.3,0.5,5)
+        for scale = linspace(0.1,0.35,5)
+            for mu = linspace(0.1,0.5,5)
                 wrist.E_lin = E_lin;
                 wrist.E_se = scale*E_lin;
                 wrist.strain_lower = strain_lower;

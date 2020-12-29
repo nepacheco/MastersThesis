@@ -11,7 +11,7 @@ n = 5; % number of notches
 phi = zeros(n,1);
 g = 1.4E-3*ones(n,1); % Diagrma sent by Pulse might be 1.45 [m] - Max depth which we assign to notch n.
 h = 0.8E-3*ones(n,1);
-c = 2.2E-3*ones(n,1);
+c = 1.2E-3*ones(n,1);
 E_lin = 40E9; % [N/m^2] - Elastic Modulus of Nitinol
 E_se = 0.08*E_lin; % [N/m^2] - Slope of Super Elastic Region for Nitinol
 mu = 0.2; % coefficient of friction for capstan
@@ -20,7 +20,7 @@ b = c(1);
 
 
 %% Comparing my Wrist Class to Josh's
-wrist = Wrist(od,id,n,h,phi,c,g,'CutType','on-axis'); % Nick's wrist class
+wrist = Wrist(od,id,n,h,phi,c,g,'CutType','off-axis'); % Nick's wrist class
 sheath = JoshWrist();
 sheath.ConstructWrist('T_0',T_0,'g',g,'c',c,'b',b,'h',h,'h_c',h,...
     'r_o',od/2,'r_i',id/2,'n',n,'material','nitinol','plotkin',false,'verbose',false);
@@ -72,14 +72,21 @@ fprintf("Difference in stress: %f, and eta: %f\n",mean(diff_mat));
 
 %% Comparing Test Results to Wrist Model
 close all
-wrist = Wrist(od,id,n,h,phi,c,g,'CutType','on-axis'); % Nick's wrist class
+cutType = 'on-axis';
+wrist = Wrist(od,id,n,h,phi,c,g,'CutType',cutType); % Nick's wrist class
+wrist.E_lin = 10E9;
+wrist.E_se = 0.35*wrist.E_lin;
+wrist.strain_lower = 0.03;
+wrist.mu = 0.4;
 file_path2 = "C:\Users\nickp\OneDrive - Worcester Polytechnic Institute (wpi.edu)\School Files\Thesis\ForceTest\12-12-2020_Experiment\12-12-2020_Results.xlsx";
 file_path1 = "C:\Users\nickp\OneDrive - Worcester Polytechnic Institute (wpi.edu)\School Files\Thesis\ForceTest\12-7-2020_Experiment\12-7-2020_Results.xlsx";
-opts = detectImportOptions(file_path2);
+% file_path1 = "C:\Users\nickp\OneDrive - Worcester Polytechnic Institute (wpi.edu)\School Files\Thesis\ForceTest\12-19-2020_Experiment\12-19-2020_Results.xlsx";
+opts = detectImportOptions(file_path1);
 opts.Sheet = 'AvgMeasurements';
 file2 = readcell(file_path2,opts);
 file1 = readcell(file_path1,opts);
 
+fprintf("Cut depth :%f, Cut Height: %f, Cut Type: %s\n",g(1),h(1),cutType);
 [force_vec2,notch_mat2] = parseFile(file2,n);
 [force_vec1,notch_mat1] = parseFile(file1,n);
 
@@ -92,18 +99,6 @@ for i = 1:points
     theta_mat_force(:,i) = wrist.theta;
 end
 
-% Generating RMSE
-diff = zeros(n+1,length(force_vec2));
-for i = 1:length(force_vec2)
-    input = force_vec2(i);
-    wrist.fwkin([input,0,0],'Type','force');
-    diff(:,i) = notch_mat2(i,:)' -...
-        rad2deg([wrist.theta; sum(wrist.theta)]);
-end
-se = diff.^2;
-mse = mean(se,2);
-rmse = sqrt(mse)
-
 diff = zeros(n+1,length(force_vec1));
 for i = 1:length(force_vec1)
     input = force_vec1(i);
@@ -113,19 +108,33 @@ for i = 1:length(force_vec1)
 end
 se = diff.^2;
 mse = mean(se,2);
+disp("Experiment 1");
 rmse = sqrt(mse)
+
+% Generating RMSE
+% diff = zeros(n+1,length(force_vec2));
+% for i = 1:length(force_vec2)
+%     input = force_vec2(i);
+%     wrist.fwkin([input,0,0],'Type','force');
+%     diff(:,i) = notch_mat2(i,:)' -...
+%         rad2deg([wrist.theta; sum(wrist.theta)]);
+% end
+% se = diff.^2;
+% mse = mean(se,2);
+% disp("Experiment 2");
+% rmse = sqrt(mse)
 
 % Plotting Force 
 figure(2)
 for i = 1:n+1
     subplot(2,3,i);
     if i < n+1
-        title(sprintf("Notch %d Experimental Results",i),'FontSize',16);
+        title(sprintf("Notch %d Experimental Results 150°",i),'FontSize',16);
         hold on
-        scatter(force_vec1,notch_mat1(:,i),'bo');
+%         scatter(force_vec1,notch_mat1(:,i),'bo');
         scatter(force_vec2,notch_mat2(:,i),'rx');
         plot(F_vec,rad2deg(theta_mat_force(i,:)),'g','Linewidth',2);
-        legend("Experiment1","Experiment2","Model",'Location','southeast','FontSize',12)
+        legend("Experiment2","Model",'Location','southeast','FontSize',12)
         xlabel("Force (N)",'FontSize',14);
         ylabel("Notch Deflection (deg)",'FontSize',14)
         set(gca,'FontSize',12)
@@ -133,10 +142,10 @@ for i = 1:n+1
     else
         title(sprintf("Total Deflection Experimental Results"),'FontSize',18);
         hold on
-        scatter(force_vec1,notch_mat1(:,i),'bo');
+%         scatter(force_vec1,notch_mat1(:,i),'bo');
         scatter(force_vec2,notch_mat2(:,i),'rx');
         plot(F_vec,rad2deg(sum(theta_mat_force(:,:))),'g','Linewidth',2);
-        legend("Experiment1","Experiment2","Model",'Location','southeast','FontSize',14)
+        legend("Experiment2","Model",'Location','southeast','FontSize',14)
         xlabel("Force (N)",'FontSize',16);
         ylabel("Tip Deflection (deg)",'FontSize',16)
         set(gca,'FontSize',14)
@@ -145,7 +154,7 @@ for i = 1:n+1
     hold off
 end
 
-DATA = [notch_mat1(:,6),force_vec1(:);notch_mat2(:,6), force_vec2(:)];
+DATA = [notch_mat1(:,6),force_vec1(:)];%notch_mat2(:,6), force_vec2(:)];
 Wrist_statics
 %% Functions
 function [force_vec, notch_mat] = parseFile(file,n)

@@ -18,7 +18,7 @@ mus = 0.2; %coefficient of static friction. Hunter originally chose 0.4 using no
 
 
 h_vec = [0.8 0.8 0.8 0.8 0.8] .* 1e-3;
-g_vec = 1.46*ones(1,5) .* 1e-3;
+g_vec = 1.4*ones(1,5) .* 1e-3;
 
 max_strain = [];
 
@@ -27,7 +27,7 @@ for i = 1:1
     %g = 0.97e-3;     %cut depth in [m]. See Figure 4.
     %g = 0.988e-3;
     %g = g_vec(i);
-    g = 1.46e-3;
+    g = 1.4e-3;
     %ro = 1.16e-3/2;   %outer radius of tube in [m].
     %ri = 0.86e-3/2;   %inner radius of tube in [m].
     ro = 1.62e-3/2;   %outer radius of tube in [m].
