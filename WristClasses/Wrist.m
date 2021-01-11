@@ -377,6 +377,29 @@ classdef Wrist < handle
             axis equal
             grid on;
         end
+        
+        function p = plot_notch_angles(obj,F_max,points)
+            %PLOT_NOTCH_ANGLES plots the notch angles with respect to force
+            %for the given wrist
+            notch_angles = zeros(obj.n,points);
+            F_vec = linspace(0,F_max,points);
+            for i = 1:points
+                obj.fwkin([F_vec(i),0,0]);
+                notch_angles(:,i) = obj.theta;
+            end
+            figure()
+            hold on
+            title('Notch angles with respect to force input','FontSize',16);
+            p = plot(F_vec,rad2deg(notch_angles));
+            xlabel("Force Input (N)",'FontSize',12);
+            ylabel("Notch Angle (deg)",'FontSize',12);
+            legend_entries = cell(1,obj.n);
+            for e = 1:obj.n
+                legend_entries(1,e) = {sprintf('Notch %d',e)};
+            end
+            legend(legend_entries,'location','southeast');
+            hold off
+        end
     end
 end
 
