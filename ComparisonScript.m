@@ -7,11 +7,11 @@ clc; clear; close all;
 % to 150° with uniform notches
 od = 1.62E-3; % [m] - outer diameter of tube
 id = 1.4E-3; % [m] - inner diameter of tube
-n = 5; % number of notches
+n = 4; % number of notches
 phi = zeros(n,1);
-g = 1.4E-3*ones(n,1); % Diagrma sent by Pulse might be 1.45 [m] - Max depth which we assign to notch n.
-h = 0.8E-3*ones(n,1);
-c = 1.2E-3*ones(n,1);
+g = [1.36,1.39,1.42,1.45].*1E-3; % Diagrma sent by Pulse might be 1.45 [m] - Max depth which we assign to notch n.
+h = 1.0E-3*ones(n,1);
+c = 1.0E-3*ones(n,1);
 E_lin = 40E9; % [N/m^2] - Elastic Modulus of Nitinol
 E_se = 0.08*E_lin; % [N/m^2] - Slope of Super Elastic Region for Nitinol
 mu = 0.2; % coefficient of friction for capstan
@@ -74,21 +74,22 @@ fprintf("Difference in stress: %f, and eta: %f\n",mean(diff_mat));
 close all
 cutType = 'on-axis';
 wrist = Wrist(od,id,n,h,phi,c,g,'CutType',cutType); % Nick's wrist class
-wrist.E_lin = 10E9;
-wrist.E_se = 0.35*wrist.E_lin;
-wrist.strain_lower = 0.03;
-wrist.mu = 0.4;
-file_path2 = "C:\Users\nickp\OneDrive - Worcester Polytechnic Institute (wpi.edu)\School Files\Thesis\ForceTest\12-12-2020_Experiment\12-12-2020_Results.xlsx";
-file_path1 = "C:\Users\nickp\OneDrive - Worcester Polytechnic Institute (wpi.edu)\School Files\Thesis\ForceTest\12-7-2020_Experiment\12-7-2020_Results.xlsx";
+% wrist.E_lin = 10E9;
+% wrist.E_se = 0.35*wrist.E_lin;
+% wrist.strain_lower = 0.03;
+% wrist.mu = 0.4;
+% file_path2 = "C:\Users\nickp\OneDrive - Worcester Polytechnic Institute (wpi.edu)\School Files\Thesis\ForceTest\12-12-2020_Experiment\12-12-2020_Results.xlsx";
+% file_path1 = "C:\Users\nickp\OneDrive - Worcester Polytechnic Institute (wpi.edu)\School Files\Thesis\ForceTest\12-7-2020_Experiment\12-7-2020_Results.xlsx";
 % file_path1 = "C:\Users\nickp\OneDrive - Worcester Polytechnic Institute (wpi.edu)\School Files\Thesis\ForceTest\12-19-2020_Experiment\12-19-2020_Results.xlsx";
+file_path1 = "C:\Users\nickp\OneDrive - Worcester Polytechnic Institute (wpi.edu)\School Files\Thesis\ForceTest\12-29-2020_Experiment\12-29-2020_Results.xlsx";
 opts = detectImportOptions(file_path1);
 opts.Sheet = 'AvgMeasurements';
-file2 = readcell(file_path2,opts);
+% file2 = readcell(file_path2,opts);
 file1 = readcell(file_path1,opts);
 
 fprintf("Cut depth :%f, Cut Height: %f, Cut Type: %s\n",g(1),h(1),cutType);
-[force_vec2,notch_mat2] = parseFile(file2,n);
 [force_vec1,notch_mat1] = parseFile(file1,n);
+% [force_vec2,notch_mat2] = parseFile(file2,n);
 
 points = 100; % how many points to plot
 diff_values = zeros(n+1,points);
@@ -129,12 +130,12 @@ figure(2)
 for i = 1:n+1
     subplot(2,3,i);
     if i < n+1
-        title(sprintf("Notch %d Experimental Results 150°",i),'FontSize',16);
+        title(sprintf("Notch %d Experimental Results Tip First",i),'FontSize',16);
         hold on
-%         scatter(force_vec1,notch_mat1(:,i),'bo');
-        scatter(force_vec2,notch_mat2(:,i),'rx');
+        scatter(force_vec1,notch_mat1(:,i),'b.');
+%         scatter(force_vec2,notch_mat2(:,i),'rx');
         plot(F_vec,rad2deg(theta_mat_force(i,:)),'g','Linewidth',2);
-        legend("Experiment2","Model",'Location','southeast','FontSize',12)
+        legend("Experiment1","Model",'Location','southeast','FontSize',12)
         xlabel("Force (N)",'FontSize',14);
         ylabel("Notch Deflection (deg)",'FontSize',14)
         set(gca,'FontSize',12)
@@ -142,10 +143,10 @@ for i = 1:n+1
     else
         title(sprintf("Total Deflection Experimental Results"),'FontSize',18);
         hold on
-%         scatter(force_vec1,notch_mat1(:,i),'bo');
-        scatter(force_vec2,notch_mat2(:,i),'rx');
+        scatter(force_vec1,notch_mat1(:,i),'b.');
+%         scatter(force_vec2,notch_mat2(:,i),'rx');
         plot(F_vec,rad2deg(sum(theta_mat_force(:,:))),'g','Linewidth',2);
-        legend("Experiment2","Model",'Location','southeast','FontSize',14)
+        legend("Experiment1","Model",'Location','southeast','FontSize',14)
         xlabel("Force (N)",'FontSize',16);
         ylabel("Tip Deflection (deg)",'FontSize',16)
         set(gca,'FontSize',14)
