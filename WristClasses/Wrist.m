@@ -83,7 +83,7 @@ classdef Wrist < handle
             
             %****** INPUT PARSING *********************
             % default values
-            type = 'geometry';
+            type = 'force';
             typeOptions = {'force','geometry'};
             
             p = inputParser();
