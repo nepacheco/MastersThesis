@@ -1,8 +1,13 @@
-function CreateXCellFile(path,varargin)
+function CreateExcelFile(path,varargin)
+%CREATEEXCELFILE - creates the excel file for storing the results of the
+%force trials.
+%   It will go through and average all the force measurements and add them
+%   as well as the image numbers to the excel sheet
+
 %****** INPUT PARSING *********************
 % default values
 isRelative = false;
-saveLocation = "TestResults.csv";
+saveLocation = "TestResults.xlsx";
 numNotches = 5;
 imgNum = 0;
 
