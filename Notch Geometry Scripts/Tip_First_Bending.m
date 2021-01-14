@@ -79,15 +79,18 @@ sheath = JoshWrist();
 sheath.ConstructWrist('T_0',T_0,'g',g,'c',c,'b',b,'h',h_w,'h_c',h_c,...
     'r_o',r_o,'r_i',r_i,'n',N,'material','nitinol','plotkin',false,'verbose',false);
 
+sheath = Wrist(od,id,n,h*ones(n,1),zeros(n,1),c,g_vec,'CutType','off-axis');
+
 % **** PLOTTING NOTCH ANGLE WRT FORCE **********
-sheath.FindMaxForce(1,5);
+% sheath.FindMaxForce(1,5);
 des_points = zeros(n,2);
 theta_last = zeros(n,1);
 points = 100; % how many points to plot
 theta_mat = zeros(n,points); % Initializing empty array to store values
-F = linspace(0,sheath.F_max,points); % Getting list of forces (x axis values)
+F = linspace(0,5,points); % Getting list of forces (x axis values)
 for i = 1:points
-    sheath.GetKinematicsForce(F(i)); % Updating tube position
+%     sheath.GetKinematicsForce(F(i)); % Updating tube position
+    sheath.fwkin([F(i);0;0]);
     theta_mat(:,i) = sheath.theta; % Getting tube position
     
     % *** DATA COLLECTION TO SEE IF WE CROSSED DESIRED ANGLE VALUE ***
