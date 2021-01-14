@@ -75,7 +75,7 @@ sheath.GetKinematicsForce(F);
 rad2deg(sheath.theta)
 
 %% Showing effect of adding precurvature
-close all;
+clc;close all;
 % TUBE PARAMETERS %
 n = 5; % number of notches
 ro = (1.62E-3)/2; % [mm] outer radius
