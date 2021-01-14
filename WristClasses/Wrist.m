@@ -305,10 +305,11 @@ classdef Wrist < handle
                         % Increment
                         k = k+1;
                     end
-                    obj.theta = obj.theta + obj.precurve_theta;
+                    obj.theta(ii) = obj.theta(ii) + obj.precurve_theta(ii);
+                    obj.check_notch_limits(ii);
                 end
                 theta_delta = sum(obj.theta)-sum(theta_last);
-                %                 theta_last = obj.theta;
+                %theta_last = obj.theta;
                 trials = trials + 1; % increment
             end
             if (obj.DEBUG)
