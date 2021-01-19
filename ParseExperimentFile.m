@@ -1,6 +1,8 @@
 function [force_vec, notch_mat] = ParseExperimentFile(file,n)
 %ParseExperimentFile - parses the NxM cell passed into a force vector and notch value
 %matrix
+%   force vector output is Nx1 and notch_mat is Nxn where n is the number
+%   of notches in the tube.
 force_index = 4;
 force_vec = [];
 notch1_index = 5;
