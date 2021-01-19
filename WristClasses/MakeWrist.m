@@ -34,7 +34,7 @@ switch (wristType)
         phi = zeros(n,1);
         c = 1.0E-3*ones(n,1);
         g = [1.36,1.39,1.42,1.45].*1E-3;
-        % tip first bending01-12-20201 Experiment
+        % tip first bending 01-12-20201 Experiment
         precurve_values = deg2rad([2.191;2.264;2.534;3.062]);
 end
 wrist = Wrist(od,id,n,h,phi,c,g,'CutType','on-axis');
