@@ -1,10 +1,22 @@
-function parameters = OptimizeParameters(wristType,experimentFiles,usePrecurve,numSets)
+function parameters = OptimizeParameters(wristType,experimentFiles,usePrecurve,numSets,paramRange)
 %OPTIMIZEPARAMETERS - optimizes the material property of a tube
+%   wristType is the type of wrist you want to use (90Tube, 150Tube,
+%   TipFirstTube)
+%   experimentFiles is the list of experiment files to use for optimization
+%   usePrecurve is a boolean that determines whether we want to add
+%   precurvature to the tube
+%   numSets it the number of sets we want to save
+
 arguments
     wristType char {mustBeMember(wristType,{'90Tube','150Tube','TipFirstTube'})}
     experimentFiles (:,1) string
     usePrecurve (1,1) logical
-    numSets double = 1
+    numSets double
+    paramRange.E_lin (1,:) double = 15E9;
+    paramRange.scale (1,:) double = 0.2;
+    paramRange.strain_lower (1,:) double = 0.02;
+    paramRange.mu (1,:) double = 0.4;
+    
 end
 % construct wrist
 wrist = MakeWrist(wristType,usePrecurve);
@@ -27,10 +39,10 @@ end
 %% Optimize Parameters
 tic
 min_norm_rmse = 100*ones(numSets,5);
-for E_lin = linspace(12.5E9,17.5E9,1)
-    for scale = linspace(0.2,0.3,1)
-        for strain_lower = linspace(0.02,0.025,1)
-            for mu = linspace(0.3,0.5,1)
+for E_lin = paramRange.E_lin
+    for scale = paramRange.scale
+        for strain_lower = paramRange.strain_lower
+            for mu = paramRange.mu
                 wrist.E_lin = E_lin;
                 wrist.E_se = scale*E_lin;
                 wrist.strain_lower = strain_lower;
