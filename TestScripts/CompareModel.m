@@ -14,7 +14,9 @@ end
 numFiles = size(experimentFiles,1);
 for i = 1:numFiles
     % Parsing File
-    file = readcell(experimentFiles(i));
+    opts = detectImportOptions(experimentFiles(i));
+    opts.Sheet = 'AvgMeasurements';
+    file = readcell(experimentFiles(i),opts);
     [force_vec notch_data] = ParseExperimentFile(file,wrist.n);
     
     force_mat(:,i) = force_vec;
