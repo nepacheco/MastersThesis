@@ -1,15 +1,17 @@
-function [rmse_total] = CompareModel(wrist,experimentFiles,parameters)
+function [rmse_total] = CompareModel(wristType,experimentFiles,usePrecurve,parameters)
 %COMPAREMODEL Compares the model to a set of experimental data using the
 %given parameters
 %   Wrist is the wrist class to use
 %   experimentFiles is a vector containing the absolute path to each
 %   experiment excel file
 arguments
-    wrist Wrist
+    wristType char {mustBeMember(wristType,{'90Tube','150Tube','TipFirstTube'})}
     experimentFiles (:,1) string
-    parameters (:,4) double = [40E9,0.08*40E9,0.02,0.4];
+    usePrecurve logical
+    parameters table
 end
 
+wrist = MakeWrist(wristType,usePrecurve);
 % Parse Experiment Files
 numFiles = size(experimentFiles,1);
 for i = 1:numFiles
@@ -27,10 +29,10 @@ rmse_total = zeros(wrist.n+1,numFiles,size(parameters,1));
 % Calculating RMSE and Plotting is done for each set of material properties
 for m = 1:size(parameters,1)
     % Defining the material properties of the wrist for this experiment
-    wrist.E_lin = parameters(m,1);
-    wrist.E_se = parameters(m,2);
-    wrist.strain_lower = parameters(m,3);
-    wrist.mu = parameters(m,4);
+    wrist.E_lin = table2array(parameters(m,'E_lin'));
+    wrist.E_se = table2array(parameters(m,'E_se'));
+    wrist.strain_lower = table2array(parameters(m,'Strain_Lower'));
+    wrist.mu = table2array(parameters(m,'Mu'));
     % Generating RMSE
     for i = 1:numFiles
         diff = zeros(wrist.n+1,length(force_mat(:,i)));
@@ -90,8 +92,11 @@ for m = 1:size(parameters,1)
         end
         hold off
     end
-    saveas(gcf,sprintf("ComparisonImages/LastComparison/test%d.png",m));
-    saveas(gcf,sprintf("ComparisonImages/LastComparison/test%d.fig",m));
+    
+    destdirectory = sprintf("ComparisonImages/PropertySets/PropertySet%d/",table2array(parameters(m,'ID')));
+    mkdir(destdirectory);
+    saveas(gcf,sprintf("ComparisonImages/PropertySets/PropertySet%d/%s.png",table2array(parameters(m,'ID')),wristType));
+    saveas(gcf,sprintf("ComparisonImages/PropertySets/PropertySet%d/%sfig",table2array(parameters(m,'ID')),wristType));
 end
 
 
