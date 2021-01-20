@@ -27,7 +27,7 @@ end
 %% Optimize Parameters
 tic
 min_norm_rmse = 100*ones(numSets,5);
-for E_lin = linspace(12.5E9,17.5E9,50)
+for E_lin = linspace(12.5E9,17.5E9,1)
     for scale = linspace(0.2,0.3,1)
         for strain_lower = linspace(0.02,0.025,1)
             for mu = linspace(0.3,0.5,1)
@@ -64,6 +64,8 @@ fprintf("Optimization duration: %f seconds \n",toc);
 tic
 load('PropertySets.mat','PropertySets');
 parameter_time = string(datetime(now,'ConvertFrom','datenum'));
+parameters = table();
+init_row = size(PropertySets,1);
 for m = 1:numSets
     set_num = PropertySets.ID(end) + 1;
     E_lin = min_norm_rmse(m,2)*1E9;
@@ -79,6 +81,13 @@ for m = 1:numSets
     [~,ia] = unique(PropertySets(:,{'E_lin','E_se','Strain_Lower','Mu','Tube','Precurvature'}),'stable');
     PropertySets = PropertySets(ia,:);
 end
+% Save the property set and add it to the workspace 
 save('PropertySets.mat','PropertySets');
+assignin ('base', 'PropertySets', PropertySets);
 fprintf("Table Update duration: %f seconds \n",toc);
+
+% output
+if (size(PropertySets,1) > init_row) % we added to the table
+    parameters = PropertySets(init_row+1,:); % return the new parameters we added
+end
 end
