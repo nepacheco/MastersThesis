@@ -100,6 +100,6 @@ fprintf("Table Update duration: %f seconds \n",toc);
 
 % output
 if (size(PropertySets,1) > init_row) % we added to the table
-    parameters = PropertySets(init_row+1,:); % return the new parameters we added
+    parameters = PropertySets(init_row+1:end,:); % return the new parameters we added
 end
 end
