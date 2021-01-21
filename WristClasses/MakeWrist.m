@@ -7,8 +7,8 @@ arguments
 end
 switch (wristType)
     case '90Tube'
-        od = 1.62;
-        id = 1.4;
+        od = 1.62E-3;
+        id = 1.4E-3;
         n = 5;
         h = 0.5E-3*ones(n,1);
         phi = zeros(n,1);
