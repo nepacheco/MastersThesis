@@ -14,6 +14,8 @@ end
 wrist = MakeWrist(wristType,usePrecurve);
 % Parse Experiment Files
 numFiles = size(experimentFiles,1);
+force_cell = cell(1,numFiles);
+notch_cell = cell(1,numFiles);
 for i = 1:numFiles
     % Parsing File
     opts = detectImportOptions(experimentFiles(i));
@@ -21,8 +23,8 @@ for i = 1:numFiles
     file = readcell(experimentFiles(i),opts);
     [force_vec notch_data] = ParseExperimentFile(file,wrist.n);
     
-    force_mat(:,i) = force_vec;
-    notch_mat(:,:,i) = notch_data;
+    force_cell(:,i) = {force_vec};
+    notch_cell(:,i) = {notch_data};
 end
 
 rmse_total = zeros(wrist.n+1,numFiles,size(parameters,1));
@@ -35,11 +37,11 @@ for m = 1:size(parameters,1)
     wrist.mu = table2array(parameters(m,'Mu'));
     % Generating RMSE
     for i = 1:numFiles
-        diff = zeros(wrist.n+1,length(force_mat(:,i)));
-        for j = 1:length(force_mat(:,i))
-            input = force_mat(j,i);
+        diff = zeros(wrist.n+1,length(force_cell{1,i}));
+        for j = 1:length(force_cell{1,i})
+            input = force_cell{1,i}(j);
             wrist.fwkin([input,0,0],'Type','force');
-            diff(:,j) = notch_mat(j,:,i)' - rad2deg([wrist.theta; sum(wrist.theta)]);
+            diff(:,j) = (notch_cell{1,i}(j,:))' - rad2deg([wrist.theta; sum(wrist.theta)]);
         end
         se = diff.^2;
         mse = mean(se,2);
@@ -60,11 +62,11 @@ for m = 1:size(parameters,1)
     for p = 1:wrist.n+1
         subplot(2,3,p);
         if p < wrist.n+1
-            title(sprintf("Notch %d Experimental Results Tip First",i),'FontSize',16);
+            title(sprintf("Notch %d Experimental Results",p),'FontSize',16);
             hold on
             legend_entries = cell(1,numFiles+1);
             for i = 1:numFiles
-                scatter(force_mat(:,i),notch_mat(:,p,i),plot_options{i});
+                scatter(force_cell{1,i},notch_cell{1,i}(:,p),plot_options{i});
                 legend_entries(i) = {sprintf("Experiment %d",i)};
             end
             plot(F_vec,rad2deg(theta_mat_force(p,:)),'g','Linewidth',2);
@@ -79,7 +81,7 @@ for m = 1:size(parameters,1)
             hold on
             legend_entries = cell(1,numFiles+1);
             for i = 1:numFiles
-                scatter(force_mat(:,i),notch_mat(:,p,i),plot_options{i});
+                scatter(force_cell{1,i},notch_cell{1,i}(:,p),plot_options{i});
                 legend_entries(i) = {sprintf("Experiment %d",i)};
             end
             plot(F_vec,rad2deg(sum(theta_mat_force(:,:))),'g','Linewidth',2);
@@ -94,11 +96,17 @@ for m = 1:size(parameters,1)
     end
     
     destdirectory = sprintf("ComparisonImages/PropertySets/PropertySet%d/",table2array(parameters(m,'ID')));
-    mkdir(destdirectory);
+   if ~exist(destdirectory, 'dir')
+       mkdir(destdirectory);
+   end
     saveas(gcf,sprintf("ComparisonImages/PropertySets/PropertySet%d/%s.png",table2array(parameters(m,'ID')),wristType));
     saveas(gcf,sprintf("ComparisonImages/PropertySets/PropertySet%d/%sfig",table2array(parameters(m,'ID')),wristType));
+    
+    writematrix(rmse_total(:,:,m),...
+        sprintf("ComparisonImages/PropertySets/PropertySet%d/RMSE_Values_%s.xlsx",table2array(parameters(m,'ID')),wristType));
 end
 
-
 end
+
+%% Local Function to Help save RMSE to excel file
 
