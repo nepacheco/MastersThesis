@@ -57,7 +57,7 @@ for m = 1:size(parameters,1)
         theta_mat_force(:,k) = wrist.theta;
     end
     
-    plot_options = {'b.','rx','k*','mo'};
+    plot_options = {'rx','b.','k*','mo'};
     figure('WindowState','Maximize');
     for p = 1:wrist.n+1
         subplot(2,3,p);
