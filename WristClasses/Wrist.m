@@ -31,7 +31,7 @@ classdef Wrist < handle
         ybar = zeros(6,1);
         I = zeros(6,1);
         
-        DEBUG = true;
+        DEBUG = false;
         cutType = 'on-axis'
         
     end
