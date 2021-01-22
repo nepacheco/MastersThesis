@@ -13,7 +13,7 @@ arguments
     usePrecurve (1,1) logical
     numSets double
     paramRange.E_lin (1,:) double = 15E9;
-    paramRange.scale (1,:) double = 0.2;
+    paramRange.E_se (1,:) double = 3E9; % typical range is 3E9-5E9
     paramRange.strain_lower (1,:) double = 0.02;
     paramRange.mu (1,:) double = 0.4;
     
@@ -40,11 +40,11 @@ end
 tic
 min_norm_rmse = 100*ones(numSets,5);
 for E_lin = paramRange.E_lin
-    for scale = paramRange.scale
+    for E_se = paramRange.E_se
         for strain_lower = paramRange.strain_lower
             for mu = paramRange.mu
                 wrist.E_lin = E_lin;
-                wrist.E_se = scale*E_lin;
+                wrist.E_se = E_se;
                 wrist.strain_lower = strain_lower;
                 wrist.mu = mu;
                 diff = zeros(wrist.n+1,length(force_readings));
@@ -62,7 +62,7 @@ for E_lin = paramRange.E_lin
                     index = find(min_norm_rmse(:,1) == max(min_norm_rmse(:,1)));
                     min_norm_rmse(index(1),1) = norm(rmse);
                     min_norm_rmse(index(1),2) = E_lin/(1E9);
-                    min_norm_rmse(index(1),3) = scale;
+                    min_norm_rmse(index(1),3) = E_se/(1E9);
                     min_norm_rmse(index(1),4) = strain_lower;
                     min_norm_rmse(index(1),5) = mu;
                 end
@@ -81,7 +81,7 @@ init_row = size(PropertySets,1);
 for m = 1:numSets
     set_num = PropertySets.ID(end) + 1;
     E_lin = min_norm_rmse(m,2)*1E9;
-    E_se = min_norm_rmse(m,3)*E_lin;
+    E_se = min_norm_rmse(m,3)*1E9;
     strain_lower = min_norm_rmse(m,4);
     mu = min_norm_rmse(m,5);
     
