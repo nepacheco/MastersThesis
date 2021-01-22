@@ -1,4 +1,4 @@
-function parameters = OptimizeParameters(wristType,experimentFiles,usePrecurve,numSets,paramRange)
+function [parameters,min_norm_rmse] = OptimizeParameters(wristType,experimentFiles,usePrecurve,useTipDeflection,numSets,paramRange)
 %OPTIMIZEPARAMETERS - optimizes the material property of a tube
 %   wristType is the type of wrist you want to use (90Tube, 150Tube,
 %   TipFirstTube)
@@ -10,8 +10,9 @@ function parameters = OptimizeParameters(wristType,experimentFiles,usePrecurve,n
 arguments
     wristType char {mustBeMember(wristType,{'90Tube','150Tube','TipFirstTube'})}
     experimentFiles (:,1) string
-    usePrecurve (1,1) logical
-    numSets double
+    usePrecurve (1,1) logical 
+    useTipDeflection (1,1) logical
+    numSets double = 1
     paramRange.E_lin (1,:) double = 15E9;
     paramRange.E_se (1,:) double = 3E9; % typical range is 3E9-5E9
     paramRange.strain_lower (1,:) double = 0.02;
@@ -58,9 +59,14 @@ for E_lin = paramRange.E_lin
                 mse = mean(se,2);
                 rmse = sqrt(mse);
                 % Replace the largest value in the min_norm_rmse vector
-                if (norm(rmse) < max(min_norm_rmse(:,1)))
+                if useTipDeflection
+                    new_rmse = norm(rmse);
+                else
+                    new_rmse = norm(rmse(1:end-1));
+                end
+                if (new_rmse) < max(min_norm_rmse(:,1)))
                     index = find(min_norm_rmse(:,1) == max(min_norm_rmse(:,1)));
-                    min_norm_rmse(index(1),1) = norm(rmse);
+                    min_norm_rmse(index(1),1) = norm(new_rmse);
                     min_norm_rmse(index(1),2) = E_lin/(1E9);
                     min_norm_rmse(index(1),3) = E_se/(1E9);
                     min_norm_rmse(index(1),4) = strain_lower;
