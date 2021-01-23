@@ -7,16 +7,16 @@ clc; clear; close all;
 % to 150° with uniform notches
 od = 1.62E-3; % [m] - outer diameter of tube
 id = 1.4E-3; % [m] - inner diameter of tube
-n = 5; % number of notches
+n = 4; % number of notches
 phi = zeros(n,1);
 % tip first bending tube
-% g = [1.36,1.39,1.42,1.45].*1E-3; 
-% h = 1.0E-3*ones(n,1);
-% c = 1.0E-3*ones(n,1);
+g = [1.36,1.39,1.42,1.45].*1E-3; 
+h = 1.0E-3*ones(n,1);
+c = 1.0E-3*ones(n,1);
 % 150 bend tube and 90 bend tube
-g = 1.4E-3*ones(n,1); 
-h = 0.8E-3*ones(n,1);
-c = 1.2E-3*ones(n,1);
+% g = 1.4E-3*ones(n,1); 
+% h = 0.5E-3*ones(n,1);
+% c = 1.5E-3*ones(n,1);
 
 E_lin = 40E9; % [N/m^2] - Elastic Modulus of Nitinol
 E_se = 0.08*E_lin; % [N/m^2] - Slope of Super Elastic Region for Nitinol
@@ -82,24 +82,24 @@ cutType = 'on-axis';
 wrist = Wrist(od,id,n,h,phi,c,g,'CutType',cutType); % Nick's wrist class
 
 % tip first bending01-12-20201 Experiment
-% precurvature = deg2rad([2.191;2.264;2.534;3.062]); 
+precurvature = deg2rad([2.191;2.264;2.534;3.062]); 
 
 % this is the aversage initial reading from the 12-12 experiment 
-precurvature = deg2rad([2.39580099;2.268315378;2.433246067;1.724263869;2.334074353]); 
+% precurvature = deg2rad([2.39580099;2.268315378;2.433246067;1.724263869;2.334074353]); 
 
 % Precurvature for experiment on 12-19-2020
 % precurvature = deg2rad([1.521853776;1.320520452;1.255100512;1.149834263;1.336681514]);
 
 wrist.precurve_theta = precurvature;
-wrist.E_lin = 10E9;
-wrist.E_se = 0.35*wrist.E_lin;
-wrist.strain_lower = 0.03;
+wrist.E_lin = 15E9;
+wrist.E_se = 0.2*wrist.E_lin;
+wrist.strain_lower = 0.02;
 wrist.mu = 0.4;
-file_path2 = "C:\Users\nickp\OneDrive - Worcester Polytechnic Institute (wpi.edu)\School Files\Thesis\ForceTest\12-12-2020_Experiment\12-12-2020_Results.xlsx";
-file_path1 = "C:\Users\nickp\OneDrive - Worcester Polytechnic Institute (wpi.edu)\School Files\Thesis\ForceTest\12-7-2020_Experiment\12-7-2020_Results.xlsx";
+% file_path2 = "C:\Users\nickp\OneDrive - Worcester Polytechnic Institute (wpi.edu)\School Files\Thesis\ForceTest\12-12-2020_Experiment\12-12-2020_Results.xlsx";
+% file_path1 = "C:\Users\nickp\OneDrive - Worcester Polytechnic Institute (wpi.edu)\School Files\Thesis\ForceTest\12-7-2020_Experiment\12-7-2020_Results.xlsx";
 % file_path1 = "C:\Users\nickp\OneDrive - Worcester Polytechnic Institute (wpi.edu)\School Files\Thesis\ForceTest\12-19-2020_Experiment\12-19-2020_Results.xlsx";
-% file_path1 = "C:\Users\nickp\OneDrive - Worcester Polytechnic Institute (wpi.edu)\School Files\Thesis\ForceTest\12-29-2020_Experiment\12-29-2020_Results.xlsx";
-% file_path2 = "C:\Users\nickp\OneDrive - Worcester Polytechnic Institute (wpi.edu)\School Files\Thesis\ForceTest\01-12-2021_Experiment\01-12-2021_Results.xlsx";
+file_path1 = "C:\Users\nickp\OneDrive - Worcester Polytechnic Institute (wpi.edu)\School Files\Thesis\ForceTest\12-29-2020_Experiment\12-29-2020_Results.xlsx";
+file_path2 = "C:\Users\nickp\OneDrive - Worcester Polytechnic Institute (wpi.edu)\School Files\Thesis\ForceTest\01-12-2021_Experiment\01-12-2021_Results.xlsx";
 opts = detectImportOptions(file_path1);
 opts.Sheet = 'AvgMeasurements';
 
@@ -119,19 +119,20 @@ for i = 1:points
     theta_mat_force(:,i) = wrist.theta;
 end
 
+% Generating RMSE for file 1
 diff = zeros(n+1,length(force_vec1));
 for i = 1:length(force_vec1)
     input = force_vec1(i);
     wrist.fwkin([input,0,0],'Type','force');
     diff(:,i) = notch_mat1(i,:)' -...
-        rad2deg([wrist.theta; sum(wrist.theta)]);
+    rad2deg([wrist.theta; sum(wrist.theta)]);
 end
 se = diff.^2;
 mse = mean(se,2);
 disp("Experiment 1");
 rmse = sqrt(mse)
 
-% Generating RMSE
+% Generating RMSE for file 2
 diff = zeros(n+1,length(force_vec2));
 for i = 1:length(force_vec2)
     input = force_vec2(i);
@@ -165,7 +166,7 @@ for i = 1:n+1
         scatter(force_vec1,notch_mat1(:,i),'b.');
         scatter(force_vec2,notch_mat2(:,i),'rx');
         plot(F_vec,rad2deg(sum(theta_mat_force(:,:))),'g','Linewidth',2);
-        legend("Experiment1","Experiment2","Model",'Location','southeast','FontSize',14)
+        legend("Experiment1","Experiment2", "Model",'Location','southeast','FontSize',14)
         xlabel("Force (N)",'FontSize',16);
         ylabel("Tip Deflection (deg)",'FontSize',16)
         set(gca,'FontSize',14)

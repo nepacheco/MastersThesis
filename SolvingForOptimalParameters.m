@@ -10,6 +10,7 @@ id = 1.4E-3; % [m] - inner diameter of tube
 n = 5; % number of notches
 phi = zeros(n,1);
 g = 1.4E-3*ones(n,1); % Diagrma sent by Pulse might be 1.45 [m] - Max depth which we assign to notch n.
+% g = [1.36;1.39;1.42;1.45]*1E-3;
 h = 0.8E-3*ones(n,1);
 c = 1.2E-3*ones(n,1);
 E_lin = 40E9; % [N/m^2] - Elastic Modulus of Nitinol
@@ -20,8 +21,18 @@ b = c(1);
 
 
 wrist = Wrist(od,id,n,h,phi,c,g,'CutType','on-axis'); % Nick's wrist class
+precurvature = deg2rad([2.39580099;2.268315378;2.433246067;1.724263869;2.334074353]); % this is the aversage initial reading from the 12-12 experiment
+% wrist.precurve_theta = precurvature2;
+
+% tip first bending01-12-20201 Experiment
+% precurvature = deg2rad([2.191;2.264;2.534;3.062]); 
+wrist.precurve_theta = precurvature;
+
 file_path2 = "C:\Users\nickp\OneDrive - Worcester Polytechnic Institute (wpi.edu)\School Files\Thesis\ForceTest\12-12-2020_Experiment\12-12-2020_Results.xlsx";
 file_path1 = "C:\Users\nickp\OneDrive - Worcester Polytechnic Institute (wpi.edu)\School Files\Thesis\ForceTest\12-7-2020_Experiment\12-7-2020_Results.xlsx";
+% file_path2 = "C:\Users\nickp\OneDrive - Worcester Polytechnic Institute (wpi.edu)\School Files\Thesis\ForceTest\01-12-2021_Experiment\01-12-2021_Results.xlsx";
+% file_path1 = "C:\Users\nickp\OneDrive - Worcester Polytechnic Institute (wpi.edu)\School Files\Thesis\ForceTest\12-29-2020_Experiment\12-29-2020_Results.xlsx";
+
 opts = detectImportOptions(file_path2);
 opts.Sheet = 'AvgMeasurements';
 file2 = readcell(file_path2,opts);
@@ -31,10 +42,11 @@ file1 = readcell(file_path1,opts);
 % [force_vec1,notch_mat1] = parseFile(file1,n);
 tic
 min_norm_rmse = [100 0 0 0 0];
-for E_lin = linspace(10E9,40E9,5)
-    for strain_lower = linspace(0.010,0.030,5)
-        for scale = linspace(0.1,0.35,5)
-            for mu = linspace(0.1,0.5,5)
+% [min_norm_rmse E_lin strain_lower scale mu]
+for E_lin = linspace(12.5E9,17.5E9,5)
+    for strain_lower = linspace(0.02,0.025,5)
+        for scale = linspace(0.2,0.3,5)
+            for mu = linspace(0.3,0.5,5)
                 wrist.E_lin = E_lin;
                 wrist.E_se = scale*E_lin;
                 wrist.strain_lower = strain_lower;
