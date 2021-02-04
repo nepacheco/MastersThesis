@@ -390,8 +390,8 @@ classdef Wrist < handle
             end
             figure()
             hold on
-            title('Notch angles with respect to force input','FontSize',16);
-            p = plot(F_vec,rad2deg(notch_angles));
+            title('Model output of notch angles with respect to force input','FontSize',16);
+            p = plot(F_vec,rad2deg(notch_angles),'LineWidth',2);
             xlabel("Force Input (N)",'FontSize',12);
             ylabel("Notch Angle (deg)",'FontSize',12);
             legend_entries = cell(1,obj.n);
