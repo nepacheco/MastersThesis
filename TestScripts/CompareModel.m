@@ -1,4 +1,4 @@
-function [rmse_total] = CompareModel(wristType,experimentFiles,usePrecurve,parameters)
+function [rmse_total] = CompareModel(wristType,experimentFiles,usePrecurve,parameters,SaveDestination)
 %COMPAREMODEL Compares the model to a set of experimental data using the
 %given parameters
 %   Wrist is the wrist class to use
@@ -9,15 +9,20 @@ arguments
     experimentFiles (:,1) string
     usePrecurve logical
     parameters table
+    SaveDestination string = "ComparisonImages/PropertySets"
 end
 
 wrist = MakeWrist(wristType,usePrecurve);
-% Parse Experiment Files
+%% Parse Experiment Files
 numFiles = size(experimentFiles,1);
 force_cell = cell(1,numFiles);
 notch_cell = cell(1,numFiles);
+experimentStr = "";
 for i = 1:numFiles
     % Parsing File
+    backslash_indicies = strfind(experimentFiles(i),"\");
+    period_indicies = strfind(experimentFiles(i),".");
+    experimentStr = experimentStr + extractBetween(experimentFiles(i),backslash_indicies(end)+1,period_indicies(end)-1);
     opts = detectImportOptions(experimentFiles(i));
     opts.Sheet = 'AvgMeasurements';
     file = readcell(experimentFiles(i),opts);
@@ -28,14 +33,14 @@ for i = 1:numFiles
 end
 
 rmse_total = zeros(wrist.n+1,numFiles,size(parameters,1));
-% Calculating RMSE and Plotting is done for each set of material properties
+%% Calculating RMSE and Plotting is done for each set of material properties
 for m = 1:size(parameters,1)
-    % Defining the material properties of the wrist for this experiment
+    %% Defining the material properties of the wrist for this experiment
     wrist.E_lin = table2array(parameters(m,'E_lin'));
     wrist.E_se = table2array(parameters(m,'E_se'));
     wrist.strain_lower = table2array(parameters(m,'Strain_Lower'));
     wrist.mu = table2array(parameters(m,'Mu'));
-    % Generating RMSE
+    %% Generating RMSE
     for i = 1:numFiles
         diff = zeros(wrist.n+1,length(force_cell{1,i}));
         for j = 1:length(force_cell{1,i})
@@ -48,7 +53,7 @@ for m = 1:size(parameters,1)
         rmse_total(:,i,m) = sqrt(mse);
     end
     
-    % Plot The Experiments along with the desired parameters
+    %% Plot The Experiments along with the desired parameters
     points = 100;
     theta_mat_force = zeros(wrist.n,points);
     F_vec = linspace(0,5.5,points); % Getting list of forces (x axis values)
@@ -95,18 +100,19 @@ for m = 1:size(parameters,1)
         hold off
     end
     
-    destdirectory = sprintf("ComparisonImages/PropertySets/PropertySet%d/",table2array(parameters(m,'ID')));
-   if ~exist(destdirectory, 'dir')
-       mkdir(destdirectory);
-   end
-    saveas(gcf,sprintf("ComparisonImages/PropertySets/PropertySet%d/%s.png",table2array(parameters(m,'ID')),wristType));
-    saveas(gcf,sprintf("ComparisonImages/PropertySets/PropertySet%d/%sfig",table2array(parameters(m,'ID')),wristType));
     
+    %% Saving the figure
+    destdirectory = sprintf("%s/PropertySet%d/",SaveDestination,table2array(parameters(m,'ID')));
+    if ~exist(destdirectory, 'dir')
+        mkdir(destdirectory);
+    end
+    saveas(gcf,sprintf("%s/PropertySet%d/%s_%s.png",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
+    saveas(gcf,sprintf("%s/PropertySet%d/%s_%sfig",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
+
     writematrix(rmse_total(:,:,m),...
-        sprintf("ComparisonImages/PropertySets/PropertySet%d/RMSE_Values_%s.xlsx",table2array(parameters(m,'ID')),wristType));
-end
+        sprintf("%s/PropertySet%d/RMSE_Values_%s_%s.xlsx",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
 
 end
 
-%% Local Function to Help save RMSE to excel file
+end
 
