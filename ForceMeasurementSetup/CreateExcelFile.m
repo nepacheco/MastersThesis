@@ -34,14 +34,16 @@ end
 % Analyzing multiple files in the directory
 filesAndFolders = dir(path);
 foldersInDir = filesAndFolders(([filesAndFolders.isdir]));
+foldersInDir = foldersInDir(3:end);
 numOfFolders = length(foldersInDir);
 
 
 writecell({},saveLocation);
 row_header = {'','Picture','Tendon Displacement','Force'};
 for i = 1:numNotches+1
-    row_header(end+1) = {sprintf('Notch %d',i)};
-    if i > numNotches
+    if i <= numNotches 
+        row_header(end+1) = {sprintf('Notch %d',i)};
+    else
         row_header(end+1) = {'Tip Displacement'};
     end
 end
@@ -61,7 +63,7 @@ for i = 1:numOfFolders
         data(k,1:4) = {'','','',F_vec(k)};
         data(k,2) = {sprintf('DSC_%d',imgNum)};
         imgNum = imgNum + 1;
-        data(k,5:end) = {''};
+        data(k,5:end) = {'n/a'};
     end
     
     writecell(data,saveLocation,'WriteMode','append');
