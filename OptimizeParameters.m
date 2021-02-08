@@ -64,7 +64,7 @@ for E_lin = paramRange.E_lin
                 else
                     new_rmse = norm(rmse(1:end-1));
                 end
-                if (new_rmse) < max(min_norm_rmse(:,1)))
+                if (new_rmse) < max(min_norm_rmse(:,1))
                     index = find(min_norm_rmse(:,1) == max(min_norm_rmse(:,1)));
                     min_norm_rmse(index(1),1) = norm(new_rmse);
                     min_norm_rmse(index(1),2) = E_lin/(1E9);
