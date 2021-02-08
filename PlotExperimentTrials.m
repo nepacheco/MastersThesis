@@ -47,4 +47,15 @@ for i = 1:n+1
     legend(legend_entries,'Location','southeast','FontSize',12);
     hold off
 end
+
+SaveDestination = "ComparisonImages/TrialImages"
+destdirectory = sprintf("%s/",SaveDestination);
+if ~exist(destdirectory, 'dir')
+    mkdir(destdirectory);
+end
+saveas(gcf,sprintf("%s/",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
+saveas(gcf,sprintf("%s/",SaveDestination,SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
+
+writematrix(rmse_total(:,:,m),...
+    sprintf("%s/PropertySet%d/RMSE_Values_%s_%s.xlsx",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
 end
