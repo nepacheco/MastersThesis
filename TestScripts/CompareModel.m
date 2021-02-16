@@ -5,7 +5,7 @@ function [rmse_total] = CompareModel(wristType,experimentFiles,usePrecurve,param
 %   experimentFiles is a vector containing the absolute path to each
 %   experiment excel file
 arguments
-    wristType char {mustBeMember(wristType,{'90Tube','150Tube','TipFirstTube'})}
+    wristType char
     experimentFiles (:,1) string
     usePrecurve logical
     parameters table

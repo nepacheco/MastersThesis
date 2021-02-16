@@ -2,7 +2,7 @@ function wrist = MakeWrist(wristType,precurvature)
 %MAKEWRIST Creates the specified wrist
 %   Based on the input string creates the wrist with the desired parameters
 arguments
-    wristType char {mustBeMember(wristType,{'90Tube','150Tube','TipFirstTube'})} 
+    wristType char {mustBeMember(wristType,{'90Tube','150Tube','150Tube2','TipFirstTube'})} 
     precurvature logical = false
 end
 switch (wristType)
@@ -35,7 +35,7 @@ switch (wristType)
         c = 1.2E-3*ones(n,1);
         g = 1.4E-3*ones(n,1);        
         % this is the aversage initial reading from the 12-12 experiment 
-        precurve_values = deg2rad([2.536745799	1.866526998	2.31430791	2.24697836	2.114218116]);
+        precurve_values = deg2rad([2.536745799;1.866526998;2.31430791;2.24697836;2.114218116]);
     case 'TipFirstTube'
         od = 1.62E-3;
         id = 1.4E-3;

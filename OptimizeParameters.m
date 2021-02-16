@@ -8,7 +8,7 @@ function [parameters,min_norm_rmse] = OptimizeParameters(wristType,experimentFil
 %   numSets it the number of sets we want to save
 
 arguments
-    wristType char {mustBeMember(wristType,{'90Tube','150Tube','TipFirstTube'})}
+    wristType char 
     experimentFiles (:,1) string
     usePrecurve (1,1) logical 
     useTipDeflection (1,1) logical
@@ -85,7 +85,11 @@ parameter_time = string(datetime(now,'ConvertFrom','datenum'));
 parameters = table();
 init_row = size(PropertySets,1);
 for m = 1:numSets
-    set_num = PropertySets.ID(end) + 1;
+    try
+        set_num = PropertySets.ID(end) + 1;
+    catch e
+        set_num = 1;
+    end
     E_lin = min_norm_rmse(m,2)*1E9;
     E_se = min_norm_rmse(m,3)*1E9;
     strain_lower = min_norm_rmse(m,4);
