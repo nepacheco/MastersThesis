@@ -25,7 +25,17 @@ switch (wristType)
         c = 1.2E-3*ones(n,1);
         g = 1.4E-3*ones(n,1);        
         % this is the aversage initial reading from the 12-12 experiment 
-        precurve_values = deg2rad([2.39580099;2.268315378;2.433246067;1.724263869;2.334074353]);
+        precurve_values = deg2rad([2.39580099;2.268315378;2.433246067;1.724263869;2.334074353]);     
+    case '150Tube2'        
+        od = 1.62E-3;
+        id = 1.4E-3;
+        n = 5;
+        h = 0.8E-3*ones(n,1);
+        phi = zeros(n,1);
+        c = 1.2E-3*ones(n,1);
+        g = 1.4E-3*ones(n,1);        
+        % this is the aversage initial reading from the 12-12 experiment 
+        precurve_values = deg2rad([2.536745799	1.866526998	2.31430791	2.24697836	2.114218116]);
     case 'TipFirstTube'
         od = 1.62E-3;
         id = 1.4E-3;
