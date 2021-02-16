@@ -1,4 +1,4 @@
-function [rmse_total] = CompareModel(wristType,experimentFiles,usePrecurve,parameters,SaveDestination,Force)
+function [rmse_total] = CompareModel(wristType,experimentFiles,usePrecurve,parameters,SaveDestination,options)
 %COMPAREMODEL Compares the model to a set of experimental data using the
 %given parameters
 %   Wrist is the wrist class to use
@@ -10,7 +10,7 @@ arguments
     usePrecurve logical
     parameters table
     SaveDestination string = "ComparisonImages/PropertySets"
-    Force (1,1) double = 5.5;
+    options.Force (1,1) double = 5.5;
 end
 
 wrist = MakeWrist(wristType,usePrecurve);
@@ -57,7 +57,7 @@ for m = 1:size(parameters,1)
     %% Plot The Experiments along with the desired parameters
     points = 100;
     theta_mat_force = zeros(wrist.n,points);
-    F_vec = linspace(0,Force,points); % Getting list of forces (x axis values)
+    F_vec = linspace(0,options.Force,points); % Getting list of forces (x axis values)
     for k = 1:points
         wrist.fwkin([F_vec(k),0,0],'Type','force');
         theta_mat_force(:,k) = wrist.theta;
