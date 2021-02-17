@@ -100,7 +100,7 @@ for m = 1:numSets
     % Don't add if duplicate
     
     PropertySets = [PropertySets; new_row];
-    [~,ia] = unique(PropertySets(:,{'E_lin','E_se','Strain_Lower','Mu','Tube','Precurvature'}),'stable');
+    [~,ia] = unique(PropertySets(:,{'E_lin','E_se','Strain_Lower','Mu','Precurvature'}),'stable');
     PropertySets = PropertySets(ia,:);
 end
 % Save the property set and add it to the workspace 
