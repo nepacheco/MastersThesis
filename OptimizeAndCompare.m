@@ -1,10 +1,10 @@
 clc;clear;close all;
 load('ExperimentFiles.mat')
 
-E_linRange = linspace(10E9,40E9,8);
-E_seRange = linspace(2.00E9,4.25E9,8);
-strain_lowerRange = linspace(0.005,0.03,8);
-muRange = linspace(0.1,0.35,8);
+E_linRange = linspace(10E9,40E9,7);
+E_seRange = linspace(2.00E9,4.25E9,7);
+strain_lowerRange = linspace(0.005,0.03,7);
+muRange = linspace(0.1,0.35,7);
 numSets = 30;
 
 % Optimizing using Tip First Tube
