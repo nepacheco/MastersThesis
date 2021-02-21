@@ -14,9 +14,9 @@ imgNum = 0;
 p = inputParser();
 addRequired(p,'path',@isstring);
 addOptional(p, 'isRelative', isRelative, @islogical);
-addParameter(p,'SaveLocation',saveLocation,@isstring);
-addParameter(p,'NumNotches',numNotches,@isnumeric);
-addParameter(p,'ImageNumber',imgNum,@isnumeric);
+addOptional(p,'NumNotches',numNotches,@isnumeric);
+addOptional(p,'SaveLocation',saveLocation,@isstring);
+addOptional(p,'ImageNumber',imgNum,@isnumeric);
 
 parse(p,path,varargin{:});
 
