@@ -1,4 +1,6 @@
 clc;clear;close all;
+
+%%
 load('ExperimentFiles.mat')
 
 E_linRange = linspace(10E9,40E9,10);
@@ -65,3 +67,4 @@ end
 expFiles = ["C:\Users\nickp\OneDrive - Worcester Polytechnic Institute (wpi.edu)\School Files\Thesis\ForceTest\02-06-2021_Experiment\02-06-2021_Results_Trial1.xlsx";
     "C:\Users\nickp\OneDrive - Worcester Polytechnic Institute (wpi.edu)\School Files\Thesis\ForceTest\02-09-2021_Experiment\02-09-2021_Results_Trial1.xlsx"];
 vals150_1 = CompareModel('150Tube',expFiles,true,PropertySets([61,72],:))
+
