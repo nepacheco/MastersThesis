@@ -1,4 +1,4 @@
-function p = PlotExperimentTrials(experimentFiles,n)
+function plot_ = PlotExperimentTrials(experimentFiles,n)
 
 experimentStr = "";
 line_type = {'-','--',':','-.'};
@@ -48,7 +48,6 @@ for i = 1:length(experimentFiles)
             title_str = sprintf("Total tip Deflection");
         end
         title(title_str,'FontSize',16);
-        legend_entries = cell(1,size(trialForceList,2));
         for t = 1:size(trialForceList,2)
             disp_name = sprintf('Exp%d Trial %d',i,t);
             plot(trialForceList{1,t},trialNotchDataList{1,t}(:,p),...
@@ -57,7 +56,7 @@ for i = 1:length(experimentFiles)
         end
         xlabel('Force (N)','FontSize',12);
         ylabel('Deflection (deg)','FontSize',12);
-        legend
+        legend;
         hold off
     end
 end
