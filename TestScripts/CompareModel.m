@@ -11,6 +11,7 @@ arguments
     parameters table
     SaveDestination string = "ComparisonImages/PropertySets"
     options.Force (1,1) double = 5.5;
+    options.Plot logical = true;
 end
 
 wrist = MakeWrist(wristType,usePrecurve);
@@ -55,64 +56,66 @@ for m = 1:size(parameters,1)
     end
     
     %% Plot The Experiments along with the desired parameters
-    points = 100;
-    theta_mat_force = zeros(wrist.n,points);
-    F_vec = linspace(0,options.Force,points); % Getting list of forces (x axis values)
-    for k = 1:points
-        wrist.fwkin([F_vec(k),0,0],'Type','force');
-        theta_mat_force(:,k) = wrist.theta;
-    end
-    
-    plot_options = {'rx','b.','k*','mo'};
-    figure('WindowState','Maximize');
-    for p = 1:wrist.n+1
-        subplot(2,3,p);
-        if p < wrist.n+1
-            title(sprintf("Notch %d Experimental Results",p),'FontSize',16);
-            hold on
-            legend_entries = cell(1,numFiles+1);
-            for i = 1:numFiles
-                scatter(force_cell{1,i},notch_cell{1,i}(:,p),plot_options{i});
-                legend_entries(i) = {sprintf("Experiment %d",i)};
-            end
-            plot(F_vec,rad2deg(theta_mat_force(p,:)),'g','Linewidth',2);
-            legend_entries(end) = {"Model"};
-            legend(legend_entries,'Location','southeast','FontSize',14)
-            xlabel("Force (N)",'FontSize',14);
-            ylabel("Notch Deflection (deg)",'FontSize',14)
-            set(gca,'FontSize',12)
-            grid on
-        else
-            title(sprintf("Total Deflection Experimental Results"),'FontSize',18);
-            hold on
-            legend_entries = cell(1,numFiles+1);
-            for i = 1:numFiles
-                scatter(force_cell{1,i},notch_cell{1,i}(:,p),plot_options{i});
-                legend_entries(i) = {sprintf("Experiment %d",i)};
-            end
-            plot(F_vec,rad2deg(sum(theta_mat_force(:,:))),'g','Linewidth',2);
-            legend_entries(end) = {"Model"};
-            legend(legend_entries,'Location','southeast','FontSize',14)
-            xlabel("Force (N)",'FontSize',16);
-            ylabel("Tip Deflection (deg)",'FontSize',16)
-            set(gca,'FontSize',14)
-            grid on
+    if options.Plot
+        points = 100;
+        theta_mat_force = zeros(wrist.n,points);
+        F_vec = linspace(0,options.Force,points); % Getting list of forces (x axis values)
+        for k = 1:points
+            wrist.fwkin([F_vec(k),0,0],'Type','force');
+            theta_mat_force(:,k) = wrist.theta;
         end
-        hold off
-    end
-    
-    
-    %% Saving the figure
-    destdirectory = sprintf("%s/PropertySet%d/",SaveDestination,table2array(parameters(m,'ID')));
-    if ~exist(destdirectory, 'dir')
-        mkdir(destdirectory);
-    end
-    saveas(gcf,sprintf("%s/PropertySet%d/%s_%s.png",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
-    saveas(gcf,sprintf("%s/PropertySet%d/%s_%sfig",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
 
-    writematrix(rmse_total(:,:,m),...
-        sprintf("%s/PropertySet%d/RMSE_Values_%s_%s.xlsx",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
-    close gcf
+        plot_options = {'rx','b.','k*','mo'};
+        figure('WindowState','Maximize');
+        for p = 1:wrist.n+1
+            subplot(2,3,p);
+            if p < wrist.n+1
+                title(sprintf("Notch %d Experimental Results",p),'FontSize',16);
+                hold on
+                legend_entries = cell(1,numFiles+1);
+                for i = 1:numFiles
+                    scatter(force_cell{1,i},notch_cell{1,i}(:,p),plot_options{i});
+                    legend_entries(i) = {sprintf("Experiment %d",i)};
+                end
+                plot(F_vec,rad2deg(theta_mat_force(p,:)),'g','Linewidth',2);
+                legend_entries(end) = {"Model"};
+                legend(legend_entries,'Location','southeast','FontSize',14)
+                xlabel("Force (N)",'FontSize',14);
+                ylabel("Notch Deflection (deg)",'FontSize',14)
+                set(gca,'FontSize',12)
+                grid on
+            else
+                title(sprintf("Total Deflection Experimental Results"),'FontSize',18);
+                hold on
+                legend_entries = cell(1,numFiles+1);
+                for i = 1:numFiles
+                    scatter(force_cell{1,i},notch_cell{1,i}(:,p),plot_options{i});
+                    legend_entries(i) = {sprintf("Experiment %d",i)};
+                end
+                plot(F_vec,rad2deg(sum(theta_mat_force(:,:))),'g','Linewidth',2);
+                legend_entries(end) = {"Model"};
+                legend(legend_entries,'Location','southeast','FontSize',14)
+                xlabel("Force (N)",'FontSize',16);
+                ylabel("Tip Deflection (deg)",'FontSize',16)
+                set(gca,'FontSize',14)
+                grid on
+            end
+            hold off
+        end
+
+
+        %% Saving the figure
+        destdirectory = sprintf("%s/PropertySet%d/",SaveDestination,table2array(parameters(m,'ID')));
+        if ~exist(destdirectory, 'dir')
+            mkdir(destdirectory);
+        end
+        saveas(gcf,sprintf("%s/PropertySet%d/%s_%s.png",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
+        saveas(gcf,sprintf("%s/PropertySet%d/%s_%sfig",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
+
+        writematrix(rmse_total(:,:,m),...
+            sprintf("%s/PropertySet%d/RMSE_Values_%s_%s.xlsx",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
+        close gcf
+    end
 end
 
 end
