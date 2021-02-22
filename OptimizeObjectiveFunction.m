@@ -5,11 +5,22 @@ Aeq = [];
 beq = [];
 lb = [5E9,1.75E9,0.01,0.05];
 ub = [30E9,4E9,0.04,0.35];
-x0 = [10E9,2.25E9,0.0272,0.2389];
-[x,fval,exitflag,output,lambda,grad,hessian]  = fmincon(@ObjectiveFunction,x0,A,b,Aeq,beq,lb,ub);
+x0 = lb;
+
+problem = createOptimProblem('fmincon',...
+    'objective',@(x)ObjectiveFunction(x),...
+    'x0',x0,'lb', lb, 'ub', ub,'options',...
+    optimoptions(@fmincon,'Algorithm','sqp','Display','off'));
+
+[x,fval] = fmincon(problem);
+gs = GlobalSearch('Display','iter');
+rng(14,'twister') % for reproducibility
+[x,fval] = run(gs,problem)
+
 
 %% Creating a table 
-x = x_withTip
+load('PropertySets.mat')
+load('ExperimentFiles.mat')
 set_num = PropertySets.ID(end) + 1;
 E_lin = x(1);
 E_se = x(2);
