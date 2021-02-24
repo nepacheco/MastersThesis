@@ -1,4 +1,4 @@
-function [rmse_total] = CompareModel(wristType,experimentFiles,usePrecurve,parameters,SaveDestination,options)
+function [rmse_total, r2_total] = CompareModel(wristType,experimentFiles,usePrecurve,parameters,SaveDestination,options)
 %COMPAREMODEL Compares the model to a set of experimental data using the
 %given parameters
 %   Wrist is the wrist class to use
@@ -20,6 +20,7 @@ numFiles = size(experimentFiles,1);
 force_cell = cell(1,numFiles);
 notch_cell = cell(1,numFiles);
 experimentStr = "";
+average = zeros(wrist.n+1,numFiles);
 for i = 1:numFiles
     % Parsing File
     backslash_indicies = strfind(experimentFiles(i),"\");
@@ -32,9 +33,10 @@ for i = 1:numFiles
     
     force_cell(:,i) = {force_vec};
     notch_cell(:,i) = {notch_data};
+    average(:,i) = mean(notch_data)';
 end
-
 rmse_total = zeros(wrist.n+1,numFiles,size(parameters,1));
+r2_total = zeros(wrist.n+1,numFiles,size(parameters,1));
 %% Calculating RMSE and Plotting is done for each set of material properties
 for m = 1:size(parameters,1)
     %% Defining the material properties of the wrist for this experiment
@@ -45,14 +47,20 @@ for m = 1:size(parameters,1)
     %% Generating RMSE
     for i = 1:numFiles
         diff = zeros(wrist.n+1,length(force_cell{1,i}));
+        
         for j = 1:length(force_cell{1,i})
             input = force_cell{1,i}(j);
             wrist.fwkin([input,0,0],'Type','force');
             diff(:,j) = (notch_cell{1,i}(j,:))' - rad2deg([wrist.theta; sum(wrist.theta)]);
         end
+
         se = diff.^2;
         mse = mean(se,2);
         rmse_total(:,i,m) = sqrt(mse);
+        
+        ssTot = sum((notch_cell{1,i}' - average(:,i)).^2,2);
+        ssRes = sum(se,2);
+        r2_total(:,i,m) = ones(wrist.n+1,1) - (ssRes./ssTot);
     end
     
     %% Plot The Experiments along with the desired parameters
