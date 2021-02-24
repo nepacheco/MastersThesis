@@ -5,14 +5,14 @@ Aeq = [];
 beq = [];
 lb = [5E9,1.75E9,0.01,0.05];
 ub = [30E9,4E9,0.04,0.35];
-x0 = lb;
+x0 = [10E9,2.25E9,0.0272,0.2389];
 
 problem = createOptimProblem('fmincon',...
     'objective',@(x)ObjectiveFunction(x),...
     'x0',x0,'lb', lb, 'ub', ub,'options',...
     optimoptions(@fmincon,'Algorithm','sqp','Display','off'));
 tic
-gs = GlobalSearch('Display','iter','NumTrialPoints',5000,'MaxTime',36000);
+gs = GlobalSearch('Display','iter','NumTrialPoints',2500,'MaxTime',36000);
 toc
 rng(14,'twister') % for reproducibility
 [x,fval] = run(gs,problem)
@@ -28,8 +28,8 @@ strain_lower = x(3);
 mu = x(4);
 parameter_time = string(datetime(now,'ConvertFrom','datenum'));
 Precurve = true;
-expFiles = "all"
-Tube = "multiple"
+expFiles = "all";
+Tube = "multiple";
 
 new_row = {set_num,E_lin,E_se,strain_lower,mu,Tube,...
         Precurve,expFiles',parameter_time};
