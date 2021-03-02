@@ -122,6 +122,8 @@ for m = 1:size(parameters,1)
 
         writematrix(rmse_total(:,:,m),...
             sprintf("%s/PropertySet%d/RMSE_Values_%s_%s.xlsx",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
+        writematrix(r2_total(:,:,m),...
+            sprintf("%s/PropertySet%d/R2_Values_%s_%s.xlsx",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
         close gcf
     end
 end
