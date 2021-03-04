@@ -12,12 +12,11 @@ problem = createOptimProblem('fmincon',...
     'x0',x0,'lb', lb, 'ub', ub,'options',...
     optimoptions(@fmincon,'Algorithm','sqp','Display','off'));
 tic
-gs = GlobalSearch('Display','iter','NumTrialPoints',2500,'MaxTime',32400);
+gs = GlobalSearch('Display','iter','NumTrialPoints',3000,'MaxTime',36000);
 rng(14,'twister') % for reproducibility
 [x,fval] = run(gs,problem);
 toc
-save
-%% Creating a table 
+
 load('PropertySets.mat')
 load('ExperimentFiles.mat')
 set_num = PropertySets.ID(end) + 1;
@@ -33,12 +32,11 @@ Tube = "multiple";
 new_row = {set_num,E_lin,E_se,strain_lower,mu,Tube,...
         Precurve,expFiles',parameter_time};
 % Don't add if duplicate
-
 PropertySets = [PropertySets; new_row];
 valsTip = CompareModel('TipFirstTube',experimentFilesTip(3),true, PropertySets(end,:),'Force',3);
 vals150 = CompareModel('150Tube',experimentFiles150(6),true, PropertySets(end,:),'Force',3);
 vals90 = CompareModel('90Tube',experimentFiles90(2),true,PropertySets(end,:),'Force',3);
-save('PropertySets.mat','PropertySets')
+% save('PropertySets.mat','PropertySets')
 
 %% Getting Objective Function data
 
