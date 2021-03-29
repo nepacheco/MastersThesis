@@ -32,7 +32,7 @@ classdef Wrist < handle
         I = zeros(6,1);
         use_friction = true;
         use_non_linear = true;
-        use_precurve = true;
+        use_precurve = false;
         
         DEBUG = false;
         cutType = 'on-axis'
