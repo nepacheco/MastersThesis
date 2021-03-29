@@ -50,6 +50,7 @@ end
 wrist = Wrist(od,id,n,h,phi,c,g,'CutType','on-axis');
 if precurvature
     wrist.precurve_theta = precurve_values;
+    wrist.use_precurve = true;
 end
 end
 
