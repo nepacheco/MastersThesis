@@ -69,6 +69,9 @@ classdef Wrist < handle
             obj.phi = phi;
             obj.c = c;
             obj.g = g;
+            obj.theta = zeros(n,1);
+            obj.s = zeros(n,1);
+            obj.kappa = zeros(n,1);
             obj.precurve_theta = zeros(n,1);
             
             obj.get_neutral_axis(); % Define geometry parameters
@@ -277,7 +280,6 @@ classdef Wrist < handle
                     % Gradient descent for non-linear modulus
                     if obj.use_non_linear
                         while k<100 && pct>1E-4
-
                             % Compute angular deflection of current segment
                             obj.theta(ii) = M_vec(ii)*obj.h(ii)/(E_vec(ii)*obj.I(ii));
 
@@ -314,10 +316,12 @@ classdef Wrist < handle
                         end
                     else
                         obj.theta(ii) = M_vec(ii)*obj.h(ii)/(E_vec(ii)*obj.I(ii));
-
+        
                         % Check to see if notch angle closes the notch, and
                         % if so, limit the notch angle
                         obj.check_notch_limits(ii);
+                        s1 = obj.h(ii)-(obj.ybar(ii))*abs(obj.theta(ii));
+                        obj.kappa(ii) = obj.theta(ii)/s1;
                     end
                     obj.theta(ii) = obj.theta(ii) + obj.precurve_theta(ii);
                     obj.check_notch_limits(ii);
@@ -388,8 +392,13 @@ classdef Wrist < handle
                 y_vec = [y_vec T(2,4)];
                 z_vec = [z_vec T(3,4)];
             end
-            plot3(x_vec,y_vec,z_vec,'Linewidth',2.5);
+            plot3(x_vec,y_vec,z_vec,'Linewidth',2.5,'Marker','.','MarkerSize',25);
             axis equal
+            xlabel('X axis (m)','FontSize',14);
+            zlabel('Z axis (m)','FontSize',14);
+            xlim([min(x_vec),max(x_vec)+eps])
+            ylim([min(y_vec),max(y_vec)+eps])
+            zlim([min(z_vec),max(z_vec)+eps])
             grid on;
         end
         
