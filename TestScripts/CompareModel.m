@@ -10,8 +10,10 @@ arguments
     usePrecurve logical
     parameters table
     SaveDestination string = "ComparisonImages/PropertySets"
-    options.Force (1,1) double = 5.5;
+    options.Force (1,1) double = 3;
     options.Plot logical = true;
+    options.use_friction = true;
+    options.use_non_linear = true;
 end
 
 wrist = MakeWrist(wristType,usePrecurve);
@@ -31,8 +33,8 @@ for i = 1:numFiles
     file = readcell(experimentFiles(i),opts);
     [force_vec notch_data] = ParseExperimentFile(file,wrist.n);
     
-    force_cell(:,i) = {force_vec};
-    notch_cell(:,i) = {notch_data};
+    force_cell(1,i) = {force_vec};
+    notch_cell(1,i) = {notch_data};
     average(:,i) = mean(notch_data)';
 end
 rmse_total = zeros(wrist.n+1,numFiles,size(parameters,1));
@@ -40,6 +42,8 @@ r2_total = zeros(wrist.n+1,numFiles,size(parameters,1));
 %% Calculating RMSE and Plotting is done for each set of material properties
 for m = 1:size(parameters,1)
     %% Defining the material properties of the wrist for this experiment
+    wrist.use_friction = options.use_friction;
+    wrist.use_non_linear = options.use_non_linear;
     wrist.E_lin = table2array(parameters(m,'E_lin'));
     wrist.E_se = table2array(parameters(m,'E_se'));
     wrist.strain_lower = table2array(parameters(m,'Strain_Lower'));
@@ -113,6 +117,12 @@ for m = 1:size(parameters,1)
 
 
         %% Saving the figure
+        if ~options.use_friction
+            experimentStr = experimentStr + "_noFriction";
+        end
+        if ~options.use_non_linear
+            experimentStr = experimentStr + "_linear";
+        end
         destdirectory = sprintf("%s/PropertySet%d/",SaveDestination,table2array(parameters(m,'ID')));
         if ~exist(destdirectory, 'dir')
             mkdir(destdirectory);
