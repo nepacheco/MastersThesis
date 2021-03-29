@@ -1,4 +1,4 @@
-function [rmse_total, r2_total] = CompareModel(wristType,experimentFiles,usePrecurve,parameters,SaveDestination,options)
+function [rmse_total, r2_total] = CompareModel(wristType,experimentData,usePrecurve,parameters,SaveDestination,options)
 %COMPAREMODEL Compares the model to a set of experimental data using the
 %given parameters
 %   Wrist is the wrist class to use
@@ -6,7 +6,7 @@ function [rmse_total, r2_total] = CompareModel(wristType,experimentFiles,usePrec
 %   experiment excel file
 arguments
     wristType char
-    experimentFiles (:,1) string
+    experimentData (1,:) cell
     usePrecurve logical
     parameters table
     SaveDestination string = "ComparisonImages/PropertySets"
@@ -14,32 +14,21 @@ arguments
     options.Plot logical = true;
     options.use_friction = true;
     options.use_non_linear = true;
+    options.numFiles = 1;
 end
+numFiles = experimentData{1,end};
+force_cell = experimentData(1,1:numFiles);
+notch_cell = experimentData(1,numFiles+1:numFiles*2);
+experimentStr = convertCharsToStrings(experimentData{1,end-1});
+expAverage = experimentData{1,end-2};
+
 
 wrist = MakeWrist(wristType,usePrecurve);
-%% Parse Experiment Files
-numFiles = size(experimentFiles,1);
-force_cell = cell(1,numFiles);
-notch_cell = cell(1,numFiles);
-experimentStr = "";
-average = zeros(wrist.n+1,numFiles);
-for i = 1:numFiles
-    % Parsing File
-    backslash_indicies = strfind(experimentFiles(i),"\");
-    period_indicies = strfind(experimentFiles(i),".");
-    experimentStr = experimentStr + extractBetween(experimentFiles(i),backslash_indicies(end)+1,period_indicies(end)-1);
-    opts = detectImportOptions(experimentFiles(i));
-    opts.Sheet = 'AvgMeasurements';
-    file = readcell(experimentFiles(i),opts);
-    [force_vec notch_data] = ParseExperimentFile(file,wrist.n);
-    
-    force_cell(1,i) = {force_vec};
-    notch_cell(1,i) = {notch_data};
-    average(:,i) = mean(notch_data)';
-end
+
+
+%% Calculating RMSE and Plotting is done for each set of material properties
 rmse_total = zeros(wrist.n+1,numFiles,size(parameters,1));
 r2_total = zeros(wrist.n+1,numFiles,size(parameters,1));
-%% Calculating RMSE and Plotting is done for each set of material properties
 for m = 1:size(parameters,1)
     %% Defining the material properties of the wrist for this experiment
     wrist.use_friction = options.use_friction;
@@ -62,7 +51,7 @@ for m = 1:size(parameters,1)
         mse = mean(se,2);
         rmse_total(:,i,m) = sqrt(mse);
         
-        ssTot = sum((notch_cell{1,i}' - average(:,i)).^2,2);
+        ssTot = sum((notch_cell{1,i}' - expAverage(:,i)).^2,2);
         ssRes = sum(se,2);
         r2_total(:,i,m) = ones(wrist.n+1,1) - (ssRes./ssTot);
     end
@@ -77,7 +66,7 @@ for m = 1:size(parameters,1)
             theta_mat_force(:,k) = wrist.theta;
         end
 
-        plot_options = {'rx','b.','k*','mo'};
+        plot_options = {'rx','b.','k*','mo','rx','rx','rx'};
         figure('WindowState','Maximize');
         for p = 1:wrist.n+1
             subplot(2,3,p);
