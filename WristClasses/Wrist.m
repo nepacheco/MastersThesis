@@ -30,6 +30,8 @@ classdef Wrist < handle
         delta_l = 0; % [m] Tendon displacement
         ybar = zeros(6,1);
         I = zeros(6,1);
+        use_friction = true;
+        use_non_linear = true;
         
         DEBUG = false;
         cutType = 'on-axis'
@@ -263,47 +265,59 @@ classdef Wrist < handle
                     %                     obj.check_notch_limits();
                     E_vec(ii) = obj.E_lin;
                     % Compute distal force and moment
-                    F_vec(ii) = obj.F*exp(-obj.mu*sum(obj.theta(1:ii))); % get force experienced by notch
+                    if obj.use_friction
+                        F_vec(ii) = obj.F*exp(-obj.mu*sum(obj.theta(1:ii))); % get force experienced by notch
+                    else
+                        F_vec(ii) = obj.F;
+                    end
                     M_vec(ii) = F_vec(ii)*(obj.ybar(ii) + obj.ID/2); % get moment experienced by notch
                     
                     pct = 100;
                     k = 1;
                     % Gradient descent for non-linear modulus
-                    while k<100 && pct>1E-4
-                        
-                        % Compute angular deflection of current segment
+                    if obj.use_non_linear
+                        while k<100 && pct>1E-4
+
+                            % Compute angular deflection of current segment
+                            obj.theta(ii) = M_vec(ii)*obj.h(ii)/(E_vec(ii)*obj.I(ii));
+
+                            % Check to see if notch angle closes the notch, and
+                            % if so, limit the notch angle
+                            obj.check_notch_limits(ii);
+
+                            % Compute section arc length, curvature and
+                            % strain
+                            s1 = obj.h(ii)-(obj.ybar(ii))*abs(obj.theta(ii));
+                            obj.kappa(ii) = obj.theta(ii)/s1;
+                            epsilon = (obj.kappa(ii).*(obj.OD/2-obj.ybar(ii)))./(1+obj.ybar(ii)*obj.kappa(ii));
+
+                            % Update modulus via gradient descent
+                            [stress_eff,eta] = obj.get_stress(abs(epsilon));
+                            new_E = E_vec(ii)-eta*(E_vec(ii)-stress_eff/abs(epsilon));
+                            if isnan(new_E)
+                                new_E = E_vec(ii);
+                            end
+
+                            % Percent change in modulus (for convergence
+                            % checking)
+                            pct = abs((new_E-E_vec(ii))/E_vec(ii));
+
+                            % Update modulus guess
+                            E_vec(ii) = new_E;
+
+                            if(obj.DEBUG)
+                                debug_vec = [trials, k, s1, obj.kappa(ii), epsilon, stress_eff, eta, new_E];
+                                debug_mat = [debug_mat; debug_vec];
+                            end
+                            % Increment
+                            k = k+1;
+                        end
+                    else
                         obj.theta(ii) = M_vec(ii)*obj.h(ii)/(E_vec(ii)*obj.I(ii));
-                        
+
                         % Check to see if notch angle closes the notch, and
                         % if so, limit the notch angle
                         obj.check_notch_limits(ii);
-                        
-                        % Compute section arc length, curvature and
-                        % strain
-                        s1 = obj.h(ii)-(obj.ybar(ii))*abs(obj.theta(ii));
-                        obj.kappa(ii) = obj.theta(ii)/s1;
-                        epsilon = (obj.kappa(ii).*(obj.OD/2-obj.ybar(ii)))./(1+obj.ybar(ii)*obj.kappa(ii));
-                        
-                        % Update modulus via gradient descent
-                        [stress_eff,eta] = obj.get_stress(abs(epsilon));
-                        new_E = E_vec(ii)-eta*(E_vec(ii)-stress_eff/abs(epsilon));
-                        if isnan(new_E)
-                            new_E = E_vec(ii);
-                        end
-                        
-                        % Percent change in modulus (for convergence
-                        % checking)
-                        pct = abs((new_E-E_vec(ii))/E_vec(ii));
-                        
-                        % Update modulus guess
-                        E_vec(ii) = new_E;
-                        
-                        if(obj.DEBUG)
-                            debug_vec = [trials, k, s1, obj.kappa(ii), epsilon, stress_eff, eta, new_E];
-                            debug_mat = [debug_mat; debug_vec];
-                        end
-                        % Increment
-                        k = k+1;
                     end
                     obj.theta(ii) = obj.theta(ii) + obj.precurve_theta(ii);
                     obj.check_notch_limits(ii);
