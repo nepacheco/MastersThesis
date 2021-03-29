@@ -18,8 +18,8 @@ b = [];
 Aeq = [];
 beq = [];
 lb = [5E9,1.75E9,0.01,0.05];
-ub = [30E9,4E9,0.04,0.35];
-x0 = [10E9,2.25E9,0.0272,0.2389];
+ub = [10E9,4E9,0.04,0.35];
+x0 = [7E9,2.25E9,0.0272,0.2389];
 
 problem = createOptimProblem('fmincon',...
     'objective',@(x)ObjectiveFunction(x,experimentDataTipFirst,experimentData90,experimentData150,...
