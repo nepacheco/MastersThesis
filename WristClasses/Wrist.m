@@ -33,6 +33,7 @@ classdef Wrist < handle
         use_friction = true;
         use_non_linear = true;
         use_precurve = false;
+        name = "wrist";
         
         DEBUG = false;
         cutType = 'on-axis'
@@ -58,9 +59,11 @@ classdef Wrist < handle
             addRequired(p,'c');
             addRequired(p,'g');
             addParameter(p,'CutType',cutType,@(x) any(validatestring(x,cutOptions)));
+            addParameter(p,'Name',"wrist");
             parse(p,OD,ID,n,h,phi,c,g,varargin{:});
             
             obj.cutType = p.Results.CutType;
+            obj.name = p.Results.Name;
             %*********************************************
             
             obj.OD = OD;
