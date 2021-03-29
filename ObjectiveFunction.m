@@ -1,7 +1,13 @@
-function output = ObjectiveFunction(x,tipDeflection)
+function output = ObjectiveFunction(x,experimentDataTip,experimentData90,experimentData150,wristTipFirst,wrist90,wrist150,tipDeflection)
 %
 arguments
     x (:,4) double
+    experimentDataTip (1,:) cell
+    experimentData90 (1,:) cell
+    experimentData150 (1,:) cell
+    wristTipFirst Wrist
+    wrist90 Wrist
+    wrist150 Wrist
     tipDeflection (1,1) logical = true
 end
 
@@ -9,7 +15,6 @@ end
 numSets = size(x,1);
 rmse_summation = ones(numSets,1);
 r2_summation = ones(numSets,1);
-load('ExperimentFiles.mat')
 for i = 1:size(x,1)
     E_lin = x(i,1);
     E_se = x(i,2);
@@ -17,9 +22,9 @@ for i = 1:size(x,1)
     Mu = x(i,4);
     
     set = table(E_lin,E_se,Strain_Lower,Mu);
-    [valsTip, r2_tip] = CompareModel('TipFirstTube',experimentFilesTip(3),true, set,'Force',3,'Plot',false);
-    [vals150, r2_150] = CompareModel('150Tube',experimentFiles150(6),true, set,'Force',3,'Plot',false);
-    [vals90, r2_90] = CompareModel('90Tube',experimentFiles90(2),true,set,'Force',3,'Plot',false);
+    [valsTip, r2_tip] = CompareModel(wristTipFirst,experimentDataTip,set,'Plot',false);
+    [vals150, r2_150] = CompareModel(wrist150,experimentData150,set,'Plot',false);
+    [vals90, r2_90] = CompareModel(wrist90,experimentData90,set,'Plot',false);
     
     if tipDeflection
         rmse_summation(i) = norm(valsTip(:,1,1)) + norm(vals150(:,1,1)) + norm(vals90(:,1,1));
