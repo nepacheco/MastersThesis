@@ -1,4 +1,18 @@
 %% Using MATLAB To optimize parameters
+load('ExperimentFiles.mat');
+% Getting file data and creating wrists
+experimentData90 = ParseExperimentFiles(experimentFiles90(2),5);
+wrist90 = MakeWrist('90Tube',true);
+wrist90.use_non_linear = false;
+
+experimentData150 = ParseExperimentFiles(experimentFiles150(6),5);
+wrist150 = MakeWrist('150Tube',true);
+wrist150.use_non_linear = false;
+
+experimentDataTipFirst = ParseExperimentFiles(experimentFilesTip(3),4);
+wristTipFirst = MakeWrist('TipFirstTube',true);
+wristTipFirst.use_non_linear = false;
+
 A = [];
 b = [];
 Aeq = [];
@@ -8,11 +22,12 @@ ub = [30E9,4E9,0.04,0.35];
 x0 = [10E9,2.25E9,0.0272,0.2389];
 
 problem = createOptimProblem('fmincon',...
-    'objective',@(x)ObjectiveFunction(x),...
+    'objective',@(x)ObjectiveFunction(x,experimentDataTipFirst,experimentData90,experimentData150,...
+    wristTipFirst,wrist90,wrist150),...
     'x0',x0,'lb', lb, 'ub', ub,'options',...
     optimoptions(@fmincon,'Algorithm','sqp','Display','off'));
 tic
-gs = GlobalSearch('Display','iter','NumTrialPoints',3000,'MaxTime',36000);
+gs = GlobalSearch('Display','iter','NumTrialPoints',3000,'MaxTime',3600);
 rng(14,'twister') % for reproducibility
 [x,fval] = run(gs,problem);
 toc
@@ -33,9 +48,9 @@ new_row = {set_num,E_lin,E_se,strain_lower,mu,Tube,...
         Precurve,expFiles',parameter_time};
 % Don't add if duplicate
 PropertySets = [PropertySets; new_row];
-valsTip = CompareModel('TipFirstTube',experimentFilesTip(3),true, PropertySets(end,:),'Force',3);
-vals150 = CompareModel('150Tube',experimentFiles150(6),true, PropertySets(end,:),'Force',3);
-vals90 = CompareModel('90Tube',experimentFiles90(2),true,PropertySets(end,:),'Force',3);
+valsTip = CompareModel(wristTipFirst,experimentDataTipFirst,PropertySets(end,:));
+vals150 = CompareModel(wrist150,experimentData150, PropertySets(end,:));
+vals90 = CompareModel(wrist90,experimentData90, PropertySets(end,:));
 % save('PropertySets.mat','PropertySets')
 
 %% Getting Objective Function data
