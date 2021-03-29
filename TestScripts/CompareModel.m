@@ -11,8 +11,6 @@ arguments
     SaveDestination string = "ComparisonImages/PropertySets"
     options.Force (1,1) double = 3;
     options.Plot logical = true;
-    options.use_friction = true;
-    options.use_non_linear = true;
     options.numFiles = 1;
 end
 numFiles = experimentData{1,end};
@@ -26,8 +24,6 @@ rmse_total = zeros(wrist.n+1,numFiles,size(parameters,1));
 r2_total = zeros(wrist.n+1,numFiles,size(parameters,1));
 for m = 1:size(parameters,1)
     %% Defining the material properties of the wrist for this experiment
-    wrist.use_friction = options.use_friction;
-    wrist.use_non_linear = options.use_non_linear;
     wrist.E_lin = table2array(parameters(m,'E_lin'));
     wrist.E_se = table2array(parameters(m,'E_se'));
     wrist.strain_lower = table2array(parameters(m,'Strain_Lower'));
