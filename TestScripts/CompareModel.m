@@ -1,13 +1,12 @@
-function [rmse_total, r2_total] = CompareModel(wristType,experimentData,usePrecurve,parameters,SaveDestination,options)
+function [rmse_total, r2_total] = CompareModel(wrist,experimentData,parameters,SaveDestination,options)
 %COMPAREMODEL Compares the model to a set of experimental data using the
 %given parameters
 %   Wrist is the wrist class to use
 %   experimentFiles is a vector containing the absolute path to each
 %   experiment excel file
 arguments
-    wristType char
+    wrist Wrist
     experimentData (1,:) cell
-    usePrecurve logical
     parameters table
     SaveDestination string = "ComparisonImages/PropertySets"
     options.Force (1,1) double = 3;
@@ -21,10 +20,6 @@ force_cell = experimentData(1,1:numFiles);
 notch_cell = experimentData(1,numFiles+1:numFiles*2);
 experimentStr = convertCharsToStrings(experimentData{1,end-1});
 expAverage = experimentData{1,end-2};
-
-
-wrist = MakeWrist(wristType,usePrecurve);
-
 
 %% Calculating RMSE and Plotting is done for each set of material properties
 rmse_total = zeros(wrist.n+1,numFiles,size(parameters,1));
@@ -106,6 +101,7 @@ for m = 1:size(parameters,1)
 
 
         %% Saving the figure
+        wristType = wrist.name;
         if ~options.use_friction
             experimentStr = experimentStr + "_noFriction";
         end
