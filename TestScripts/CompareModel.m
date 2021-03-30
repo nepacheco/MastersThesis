@@ -98,10 +98,10 @@ for m = 1:size(parameters,1)
 
         %% Saving the figure
         wristType = wrist.name;
-        if ~options.use_friction
+        if ~wrist.use_friction
             experimentStr = experimentStr + "_noFriction";
         end
-        if ~options.use_non_linear
+        if ~wrist.use_non_linear
             experimentStr = experimentStr + "_linear";
         end
         destdirectory = sprintf("%s/PropertySet%d/",SaveDestination,table2array(parameters(m,'ID')));
