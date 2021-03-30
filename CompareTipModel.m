@@ -21,6 +21,7 @@ expAverage = experimentData{1,end-2};
 
 %% Calculating RMSE and Plotting is done for each set of material properties
 rmse_total = zeros(1,numFiles,size(parameters,1));
+tip_error = cell(1,numFiles,size(parameters,1));
 % r2_total = zeros(wrist.n+1,numFiles,size(parameters,1));
 for m = 1:size(parameters,1)
     %% Defining the material properties of the wrist for this experiment
@@ -55,10 +56,11 @@ for m = 1:size(parameters,1)
             
             diff(1,j) = norm(tip_model - tip_exp);
         end
-
+        
         se = diff.^2;
         mse = mean(se,2);
         rmse_total(:,i,m) = sqrt(mse);
+        tip_error(:,i,m) = {diff(1,:)};
     end
     
     %% Plot The Experiments along with the desired parameters
@@ -71,65 +73,39 @@ for m = 1:size(parameters,1)
             theta_mat_force(:,k) = wrist.theta;
         end
 
-        plot_options = {'rx','b.','k*','mo','rx','rx','rx'};
         figure('WindowState','Maximize');
-        for p = 1:wrist.n+1
-            subplot(2,3,p);
-            if p < wrist.n+1
-                title(sprintf("Notch %d Experimental Results",p),'FontSize',16);
-                hold on
-                legend_entries = cell(1,numFiles+1);
-                for i = 1:numFiles
-                    scatter(force_cell{1,i},notch_cell{1,i}(:,p),plot_options{i});
-                    legend_entries(i) = {sprintf("Experiment %d",i)};
-                end
-                plot(F_vec,rad2deg(theta_mat_force(p,:)),'g','Linewidth',2);
-                legend_entries(end) = {"Model"};
-                legend(legend_entries,'Location','southeast','FontSize',14)
-                xlabel("Force (N)",'FontSize',14);
-                ylabel("Notch Deflection (deg)",'FontSize',14)
-                set(gca,'FontSize',12)
-                grid on
-            else
-                title(sprintf("Total Deflection Experimental Results"),'FontSize',18);
-                hold on
-                legend_entries = cell(1,numFiles+1);
-                for i = 1:numFiles
-                    scatter(force_cell{1,i},notch_cell{1,i}(:,p),plot_options{i});
-                    legend_entries(i) = {sprintf("Experiment %d",i)};
-                end
-                plot(F_vec,rad2deg(sum(theta_mat_force(:,:))),'g','Linewidth',2);
-                legend_entries(end) = {"Model"};
-                legend(legend_entries,'Location','southeast','FontSize',14)
-                xlabel("Force (N)",'FontSize',16);
-                ylabel("Tip Deflection (deg)",'FontSize',16)
-                set(gca,'FontSize',14)
-                grid on
-            end
-            hold off
+        title(sprintf("%s Tip RMSE as a Function of Force",wrist.name),'FontSize',16);
+        hold on
+        for i = 1:numFiles
+            scatter(force_cell{1,i},tip_error{1,i,m},300,'rx');
         end
+        xlabel("Force (N)",'FontSize',14);
+        ylabel("RMSE (m)",'FontSize',14)
+        set(gca,'FontSize',12)
+        grid on
+        hold off
 
 
         %% Saving the figure
-        wristType = wrist.name;
-        if ~wrist.use_friction
-            experimentStr = experimentStr + "_noFriction";
-        end
-        if ~wrist.use_non_linear
-            experimentStr = experimentStr + "_linear";
-        end
-        destdirectory = sprintf("%s/PropertySet%d/",SaveDestination,table2array(parameters(m,'ID')));
-        if ~exist(destdirectory, 'dir')
-            mkdir(destdirectory);
-        end
-        saveas(gcf,sprintf("%s/PropertySet%d/%s_%s.png",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
-        saveas(gcf,sprintf("%s/PropertySet%d/%s_%sfig",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
-
-        writematrix(rmse_total(:,:,m),...
-            sprintf("%s/PropertySet%d/RMSE_Values_%s_%s.xlsx",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
-        writematrix(r2_total(:,:,m),...
-            sprintf("%s/PropertySet%d/R2_Values_%s_%s.xlsx",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
-        close gcf
+%         wristType = wrist.name;
+%         if ~wrist.use_friction
+%             experimentStr = experimentStr + "_noFriction";
+%         end
+%         if ~wrist.use_non_linear
+%             experimentStr = experimentStr + "_linear";
+%         end
+%         destdirectory = sprintf("%s/PropertySet%d/",SaveDestination,table2array(parameters(m,'ID')));
+%         if ~exist(destdirectory, 'dir')
+%             mkdir(destdirectory);
+%         end
+%         saveas(gcf,sprintf("%s/PropertySet%d/%s_%s.png",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
+%         saveas(gcf,sprintf("%s/PropertySet%d/%s_%sfig",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
+% 
+%         writematrix(rmse_total(:,:,m),...
+%             sprintf("%s/PropertySet%d/RMSE_Values_%s_%s.xlsx",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
+%         writematrix(r2_total(:,:,m),...
+%             sprintf("%s/PropertySet%d/R2_Values_%s_%s.xlsx",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
+%         close gcf
     end
 end
 
