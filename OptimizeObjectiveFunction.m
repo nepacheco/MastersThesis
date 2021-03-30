@@ -71,7 +71,7 @@ wrist150 = MakeWrist('150Tube',true);
 experimentDataTipFirst = ParseExperimentFiles(experimentFilesTip(3),4);
 wristTipFirst = MakeWrist('TipFirstTube',true);
 toc
-%%
+
 A = [];
 b = [];
 Aeq = [];
@@ -92,7 +92,7 @@ rng(14,'twister') % for reproducibility
 [x,fval] = run(gs,problem);
 toc
 save
-%%
+
 load('PropertySets.mat')
 load('ExperimentFiles.mat')
 
