@@ -8,25 +8,26 @@ load('PropertySets.mat');
 parameters = PropertySets(196,:);
 % Pick desired theta readings and force readings
 
-%% For Tip First Image: DSC 2320
+%% For Tip First Image: 2324
 n = 4;
-theta_des = deg2rad([12.95479079; 21.02054754; 35.44172543; 37.65617083]); %[deg]
-force_input = 1.342364; %[N]
+theta_des = deg2rad([31.5282 38.0678 37.6685 37.6272]'); %[deg]
+force_input = 1.8852; %[N]
 % Make Wrist
-% wrist = MakeWrist('TipFirstTube');
+wrist = MakeWrist('TipFirstTube',true);
 
 %% For 150 Tube
 % n = 5;
-% theta_des = deg2rad([	19.81294513	17.02661081	15.41854107	13.90919924	14.35484336]'); %[deg]
-% force_input = 1.198876; %[N]
+% theta_des = deg2rad([31.01822282	30.25792933	25.50073754	19.95987288	19.03623321]'); %[deg]
+% force_input = 1.55515; %[N]
 % % Make Wrist
+% wrist = MakeWrist('150Tube',true);
 
 %% For 90 Tube
-n = 5;
-theta_des = deg2rad([17.02091355	15.54938205	14.6406139	13.33544722	13.30206208]'); %[deg]
-force_input = 1.362315; %[N]
-% Make Wrist
-wrist = MakeWrist('90Tube');
+% n = 5;
+% theta_des = deg2rad([17.02091355	15.54938205	14.6406139	13.33544722	13.30206208]'); %[deg]
+% force_input = 1.362315; %[N]
+% % Make Wrist
+% wrist = MakeWrist('90Tube');
 
 
 %%
@@ -49,7 +50,8 @@ wrist.kappa = kappa_des;
 wrist.plot_stick_model;
 
 %% Linear and NO friction
-% wrist.E_lin = (parameters.E_lin+parameters.E_se)/2;
+wrist.E_lin = 7.51E9;
+wrist.mu = 0.05;
 wrist.use_friction = false;
 wrist.use_non_linear = false;
 [~,T1] = wrist.fwkin([force_input,0,0]);
@@ -58,7 +60,8 @@ hold on;
 wrist.plot_stick_model;
 
 %% Linear and friction 
-% wrist.E_lin = (parameters.E_lin+parameters.E_se)/2;
+wrist.E_lin = 7.51E9;
+wrist.mu = 0.05;
 wrist.use_friction = true;
 wrist.use_non_linear = false;
 [~,T2] = wrist.fwkin([force_input,0,0]);
@@ -68,6 +71,7 @@ wrist.plot_stick_model;
 
 %% Non Linear and Friction
 wrist.E_lin = parameters.E_lin;
+wrist.mu = parameters.Mu;
 wrist.use_friction = true;
 wrist.use_non_linear = true;
 [~,T3] = wrist.fwkin([force_input,0,0]);
@@ -76,5 +80,5 @@ hold on;
 wrist.plot_stick_model;
 
 view(0,0);
-title('90 Tube Comparisons of different kinematic algorithms with E_{lin} = 10GPa','FontSize',16)'
+title('Tip First Tube Comparisons of different kinematic algorithms with E_{lin} = 7.51GPa','FontSize',16)'
 legend('Experiment','No Friction All Linear', 'Friction All Linear','Full Model','FontSize',14)
