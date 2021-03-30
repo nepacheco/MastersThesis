@@ -1,5 +1,6 @@
-%% Using MATLAB To optimize parameters
+%% Using MATLAB To optimize parameters to reduce angle error
 load('ExperimentFiles.mat');
+tic
 % Getting file data and creating wrists
 experimentData90 = ParseExperimentFiles(experimentFiles90(2),5);
 wrist90 = MakeWrist('90Tube',true);
@@ -12,6 +13,8 @@ wrist150.use_non_linear = false;
 experimentDataTipFirst = ParseExperimentFiles(experimentFilesTip(3),4);
 wristTipFirst = MakeWrist('TipFirstTube',true);
 wristTipFirst.use_non_linear = false;
+
+toc
 
 A = [];
 b = [];
@@ -34,7 +37,8 @@ toc
 
 load('PropertySets.mat')
 load('ExperimentFiles.mat')
-set_num = PropertySets.ID(end) + 1;
+
+set_num = ProperSets(end,'ID') + 1;
 E_lin = x(1);
 E_se = x(2);
 strain_lower = x(3);
@@ -48,11 +52,69 @@ new_row = {set_num,E_lin,E_se,strain_lower,mu,Tube,...
         Precurve,expFiles',parameter_time};
 % Don't add if duplicate
 PropertySets = [PropertySets; new_row];
+
 valsTip = CompareModel(wristTipFirst,experimentDataTipFirst,PropertySets(end,:));
 vals150 = CompareModel(wrist150,experimentData150, PropertySets(end,:));
 vals90 = CompareModel(wrist90,experimentData90, PropertySets(end,:));
-% save('PropertySets.mat','PropertySets')
+save('PropertySets.mat','PropertySets')
+%% Optimizing for Tip Error
+clc; clear; close all;
+load('ExperimentFiles.mat');
+tic
+% Getting file data and creating wrists
+experimentData90 = ParseExperimentFiles(experimentFiles90(2),5);
+wrist90 = MakeWrist('90Tube',true);
 
+experimentData150 = ParseExperimentFiles(experimentFiles150(6),5);
+wrist150 = MakeWrist('150Tube',true);
+
+experimentDataTipFirst = ParseExperimentFiles(experimentFilesTip(3),4);
+wristTipFirst = MakeWrist('TipFirstTube',true);
+toc
+%%
+A = [];
+b = [];
+Aeq = [];
+beq = [];
+lb = [5E9,1.75E9,0.01,0.05];
+ub = [20E9,5E9,0.04,0.35];
+x0 = [10E9,3E9,0.0272,0.1275];
+tic
+problem = createOptimProblem('fmincon',...
+    'objective',@(x)ObjectiveFunction2(x,experimentDataTipFirst,experimentData90,experimentData150,...
+    wristTipFirst,wrist90,wrist150),...
+    'x0',x0,'lb', lb, 'ub', ub,'options',...
+    optimoptions(@fmincon,'Algorithm','sqp','Display','off'));
+toc
+tic
+gs = GlobalSearch('Display','iter','NumTrialPoints',5000,'MaxTime',36000);
+rng(14,'twister') % for reproducibility
+[x,fval] = run(gs,problem);
+toc
+save
+%%
+load('PropertySets.mat')
+load('ExperimentFiles.mat')
+
+set_num = PropertySets.ID(end) + 1;
+E_lin = x(1);
+E_se = x(2);
+strain_lower = x(3);
+mu = x(4);
+parameter_time = string(datetime(now,'ConvertFrom','datenum'));
+Precurve = true;
+expFiles = "TipRMSE";
+Tube = "multiple";
+
+new_row = {set_num,E_lin,E_se,strain_lower,mu,Tube,...
+        Precurve,expFiles',parameter_time};
+% Don't add if duplicate
+PropertySets = [PropertySets; new_row];
+
+valsTip = CompareModel(wristTipFirst,experimentDataTipFirst,PropertySets(end,:));
+vals150 = CompareModel(wrist150,experimentData150, PropertySets(end,:));
+vals90 = CompareModel(wrist90,experimentData90, PropertySets(end,:));
+save('PropertySets.mat','PropertySets')
 %% Getting Objective Function data
 
 numPoints = 50;
