@@ -13,8 +13,11 @@ wrist150.use_non_linear = false;
 experimentDataTipFirst = ParseExperimentFiles(experimentFilesTip(3),4);
 wristTipFirst = MakeWrist('TipFirstTube',true);
 wristTipFirst.use_non_linear = false;
-
+CompareTipModel(wrist150,experimentData150,PropertySets(198,:))
+CompareTipModel(wrist90,experimentData90,PropertySets(198,:))
+CompareTipModel(wristTipFirst,experimentDataTipFirst,PropertySets(198,:))
 toc
+%%
 
 A = [];
 b = [];
@@ -60,6 +63,7 @@ save('PropertySets.mat','PropertySets')
 %% Optimizing for Tip Error
 clc; clear; close all;
 load('ExperimentFiles.mat');
+load('PropertySets.mat')
 tic
 % Getting file data and creating wrists
 experimentData90 = ParseExperimentFiles(experimentFiles90(2),5);
@@ -72,6 +76,11 @@ experimentDataTipFirst = ParseExperimentFiles(experimentFilesTip(3),4);
 wristTipFirst = MakeWrist('TipFirstTube',true);
 toc
 
+CompareTipModel(wrist150,experimentData150,PropertySets(196,:))
+CompareTipModel(wrist90,experimentData90,PropertySets(196,:))
+CompareTipModel(wristTipFirst,experimentDataTipFirst,PropertySets(196,:))
+
+%% 
 A = [];
 b = [];
 Aeq = [];
