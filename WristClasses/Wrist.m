@@ -293,8 +293,8 @@ classdef Wrist < handle
 
                             % Compute section arc length, curvature and
                             % strain
-                            s1 = obj.h(ii)-(obj.ybar(ii))*abs(obj.theta(ii));
-                            obj.kappa(ii) = obj.theta(ii)/s1;
+                            obj.s(ii)  = obj.h(ii)-(obj.ybar(ii))*abs(obj.theta(ii));
+                            obj.kappa(ii) = obj.theta(ii)/obj.s(ii);
                             epsilon = (obj.kappa(ii).*(obj.OD/2-obj.ybar(ii)))./(1+obj.ybar(ii)*obj.kappa(ii));
 
                             % Update modulus via gradient descent
@@ -324,11 +324,13 @@ classdef Wrist < handle
                         % Check to see if notch angle closes the notch, and
                         % if so, limit the notch angle
                         obj.check_notch_limits(ii);
-                        s1 = obj.h(ii)-(obj.ybar(ii))*abs(obj.theta(ii));
-                        obj.kappa(ii) = obj.theta(ii)/s1;
+                        obj.s(ii) = obj.h(ii)-(obj.ybar(ii))*abs(obj.theta(ii));
+                        obj.kappa(ii) = obj.theta(ii)/obj.s(ii);
                     end
                     obj.theta(ii) = obj.theta(ii) + obj.precurve_theta(ii);
                     obj.check_notch_limits(ii);
+                    obj.s(ii)  = obj.h(ii)-(obj.ybar(ii))*abs(obj.theta(ii));
+                    obj.kappa(ii) = obj.theta(ii)/obj.s(ii);
                 end
                 theta_delta = sum(obj.theta)-sum(theta_last);
                 %theta_last = obj.theta;
