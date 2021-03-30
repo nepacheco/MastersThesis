@@ -104,17 +104,17 @@ for m = 1:size(parameters,1)
         if ~wrist.use_non_linear
             experimentStr = experimentStr + "_linear";
         end
-        destdirectory = sprintf("%s/PropertySet%d/",SaveDestination,table2array(parameters(m,'ID')));
+        destdirectory = sprintf("%s/PropertySet%d/NotchRMSE/",SaveDestination,table2array(parameters(m,'ID')));
         if ~exist(destdirectory, 'dir')
             mkdir(destdirectory);
         end
-        saveas(gcf,sprintf("%s/PropertySet%d/%s_%s.png",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
-        saveas(gcf,sprintf("%s/PropertySet%d/%s_%sfig",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
+        saveas(gcf,sprintf("%s/PropertySet%d/NotchRMSE/%s_%s.png",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
+        saveas(gcf,sprintf("%s/PropertySet%d/NotchRMSE/%s_%sfig",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
 
         writematrix(rmse_total(:,:,m),...
-            sprintf("%s/PropertySet%d/RMSE_Values_%s_%s.xlsx",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
+            sprintf("%s/PropertySet%d/NotchRMSE/RMSE_Values_%s_%s.xlsx",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
         writematrix(r2_total(:,:,m),...
-            sprintf("%s/PropertySet%d/R2_Values_%s_%s.xlsx",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
+            sprintf("%s/PropertySet%d/NotchRMSE/R2_Values_%s_%s.xlsx",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
         close gcf
     end
 end
