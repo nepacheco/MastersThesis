@@ -400,9 +400,9 @@ classdef Wrist < handle
             axis equal
             xlabel('X axis (m)','FontSize',14);
             zlabel('Z axis (m)','FontSize',14);
-            xlim([min(x_vec),max(x_vec)+eps])
-            ylim([min(y_vec),max(y_vec)+eps])
-            zlim([min(z_vec),max(z_vec)+eps])
+%             xlim([min(x_vec),max(x_vec)+eps])
+%             ylim([min(y_vec),max(y_vec)+eps])
+%             zlim([min(z_vec),max(z_vec)+eps])
             grid on;
         end
         
