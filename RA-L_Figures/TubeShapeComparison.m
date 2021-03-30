@@ -80,5 +80,17 @@ hold on;
 wrist.plot_stick_model;
 
 view(0,0);
-title('Tip First Tube Comparisons of different kinematic algorithms with E_{lin} = 7.51GPa','FontSize',16)'
+title('Tip First Comparisons of different kinematic algorithms with E_{lin} = 7.51GPa','FontSize',16)'
 legend('Experiment','No Friction All Linear', 'Friction All Linear','Full Model','FontSize',14)
+
+
+%% Test
+% wrist.E_lin = parameters.E_lin;
+% wrist.mu = parameters.Mu;
+% wrist.use_friction = true;
+% wrist.use_non_linear = true;
+% [~,T3] = wrist.fwkin([2.05,0,0]);
+% gca;
+% hold on;
+% wrist.plot_stick_model;
+% view(0,0);
