@@ -1,4 +1,4 @@
-function [parameters,min_norm_rmse] = OptimizeParameters(wristType,experimentFiles,usePrecurve,useTipDeflection,numSets,paramRange)
+function [parameters,min_norm_rmse] = OptimizeParameters(experimentDataTip,experimentData90,experimentData150,wristTipFirst,wrist90,wrist150,useTipDeflection,numSets,paramRange)
 %OPTIMIZEPARAMETERS - optimizes the material property of a tube
 %   wristType is the type of wrist you want to use (90Tube, 150Tube,
 %   TipFirstTube)
@@ -8,9 +8,12 @@ function [parameters,min_norm_rmse] = OptimizeParameters(wristType,experimentFil
 %   numSets it the number of sets we want to save
 
 arguments
-    wristType char 
-    experimentFiles (:,1) string
-    usePrecurve (1,1) logical 
+    experimentDataTip (1,:) cell
+    experimentData90 (1,:) cell
+    experimentData150 (1,:) cell
+    wristTipFirst Wrist
+    wrist90 Wrist
+    wrist150 Wrist
     useTipDeflection (1,1) logical
     numSets double = 1
     paramRange.E_lin (1,:) double = 15E9;
@@ -20,22 +23,7 @@ arguments
     
 end
 % construct wrist
-wrist = MakeWrist(wristType,usePrecurve);
 
-%% read experiment files
-numFiles = size(experimentFiles,1);
-force_readings = [];
-notch_mat = [];
-for i = 1:numFiles
-    % Parsing File
-    opts = detectImportOptions(experimentFiles(i));
-    opts.Sheet = 'AvgMeasurements';
-    file = readcell(experimentFiles(i),opts);
-    [force_vec notch_data] = ParseExperimentFile(file,wrist.n);
-    
-    force_readings = [force_readings; force_vec];
-    notch_mat = [notch_mat; notch_data];
-end
 
 %% Optimize Parameters
 tic
@@ -44,29 +32,11 @@ for E_lin = paramRange.E_lin
     for E_se = paramRange.E_se
         for strain_lower = paramRange.strain_lower
             for mu = paramRange.mu
-                wrist.E_lin = E_lin;
-                wrist.E_se = E_se;
-                wrist.strain_lower = strain_lower;
-                wrist.mu = mu;
-                diff = zeros(wrist.n+1,length(force_readings));
-                for i = 1:length(force_readings)
-                    input = force_readings(i);
-                    wrist.fwkin([input,0,0],'Type','force');
-                    diff(:,i) = notch_mat(i,:)' -...
-                        rad2deg([wrist.theta; sum(wrist.theta)]);
-                end
-                se = diff.^2;
-                mse = mean(se,2);
-                rmse = sqrt(mse);
-                % Replace the largest value in the min_norm_rmse vector
-                if useTipDeflection
-                    new_rmse = norm(rmse);
-                else
-                    new_rmse = norm(rmse(1:end-1));
-                end
-                if (new_rmse) < max(min_norm_rmse(:,1))
+                set = [E_lin,E_se,strain_lower,mu];
+                output = ObjectiveFunction(set,experimentDataTip,experimentData90,experimentData150, wristTipFirst,wrist90,wrist150,useTipDeflection);
+                if (output) < max(min_norm_rmse(:,1))
                     index = find(min_norm_rmse(:,1) == max(min_norm_rmse(:,1)));
-                    min_norm_rmse(index(1),1) = norm(new_rmse);
+                    min_norm_rmse(index(1),1) = output;
                     min_norm_rmse(index(1),2) = E_lin/(1E9);
                     min_norm_rmse(index(1),3) = E_se/(1E9);
                     min_norm_rmse(index(1),4) = strain_lower;
@@ -94,7 +64,7 @@ for m = 1:numSets
     E_se = min_norm_rmse(m,3)*1E9;
     strain_lower = min_norm_rmse(m,4);
     mu = min_norm_rmse(m,5);
-    
+    wristType = 'all';
     new_row = {set_num,E_lin,E_se,strain_lower,mu,wristType,...
         usePrecurve,experimentFiles',parameter_time};
     % Don't add if duplicate
