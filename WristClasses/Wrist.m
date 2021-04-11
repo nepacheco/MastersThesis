@@ -286,31 +286,31 @@ classdef Wrist < handle
                         while k<100 && pct>1E-4
                             % Compute angular deflection of current segment
                             obj.theta(ii) = M_vec(ii)*obj.h(ii)/(E_vec(ii)*obj.I(ii));
-
+                            
                             % Check to see if notch angle closes the notch, and
                             % if so, limit the notch angle
                             obj.check_notch_limits(ii);
-
+                            
                             % Compute section arc length, curvature and
                             % strain
                             obj.s(ii)  = obj.h(ii)-(obj.ybar(ii))*abs(obj.theta(ii));
                             obj.kappa(ii) = obj.theta(ii)/obj.s(ii);
                             epsilon = (obj.kappa(ii).*(obj.OD/2-obj.ybar(ii)))./(1+obj.ybar(ii)*obj.kappa(ii));
-
+                            
                             % Update modulus via gradient descent
                             [stress_eff,eta] = obj.get_stress(abs(epsilon));
                             new_E = E_vec(ii)-eta*(E_vec(ii)-stress_eff/abs(epsilon));
                             if isnan(new_E)
                                 new_E = E_vec(ii);
                             end
-
+                            
                             % Percent change in modulus (for convergence
                             % checking)
                             pct = abs((new_E-E_vec(ii))/E_vec(ii));
-
+                            
                             % Update modulus guess
                             E_vec(ii) = new_E;
-
+                            
                             if(obj.DEBUG)
                                 debug_vec = [trials, k, s1, obj.kappa(ii), epsilon, stress_eff, eta, new_E];
                                 debug_mat = [debug_mat; debug_vec];
@@ -320,7 +320,7 @@ classdef Wrist < handle
                         end
                     else
                         obj.theta(ii) = M_vec(ii)*obj.h(ii)/(E_vec(ii)*obj.I(ii));
-        
+                        
                         % Check to see if notch angle closes the notch, and
                         % if so, limit the notch angle
                         obj.check_notch_limits(ii);
@@ -374,7 +374,7 @@ classdef Wrist < handle
             eta_fun = @(e) (e<obj.strain_lower).*.5+...
                 (e >= obj.strain_lower && e < obj.strain_upper).*1+...
                 (e >= obj.strain_upper).*0.3;
-           
+            
             eta = eta_fun(strain);
         end
         
@@ -387,7 +387,14 @@ classdef Wrist < handle
             maxL = (k*obj.h(1)*(obj.ID/2 + obj.ybar(1))/(1 + obj.ybar(1)*k));
         end
         
-        function obj = plot_stick_model(obj)
+        function obj = plot_stick_model(obj,options)
+            arguments
+                obj Wrist
+                options.Linewidth (1,1) double = 1.5
+                options.Marker (1,:) char = '.'
+                options.MarkerSize (1,1) double = 25
+                options.Color (1,3) double = [0 0.4470 0.7410];
+            end
             x_vec = [];
             y_vec = [];
             z_vec = [];
@@ -398,13 +405,15 @@ classdef Wrist < handle
                 y_vec = [y_vec T(2,4)];
                 z_vec = [z_vec T(3,4)];
             end
-            plot3(x_vec,y_vec,z_vec,'Linewidth',2.5,'Marker','.','MarkerSize',25);
+            plot3(1000*x_vec,1000*y_vec,1000*z_vec,'Linewidth',...
+                options.Linewidth,'Marker',options.Marker,'MarkerSize',...
+                options.MarkerSize,'Color',options.Color);
             axis equal
-            xlabel('X axis (m)','FontSize',14);
-            zlabel('Z axis (m)','FontSize',14);
-%             xlim([min(x_vec),max(x_vec)+eps])
-%             ylim([min(y_vec),max(y_vec)+eps])
-%             zlim([min(z_vec),max(z_vec)+eps])
+            xlabel('X axis (mm)','FontSize',18,'FontName','CMU Serif');
+            zlabel('Z axis (mm)','FontSize',18,'FontName','CMU Serif');
+            %             xlim([min(x_vec),max(x_vec)+eps])
+            %             ylim([min(y_vec),max(y_vec)+eps])
+            %             zlim([min(z_vec),max(z_vec)+eps])
             grid on;
         end
         

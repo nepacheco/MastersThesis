@@ -74,10 +74,10 @@ for m = 1:size(parameters,1)
         end
 
         figure('WindowState','Maximize');
-        title(sprintf("%s Tip RMSE as a Function of Force",wrist.name),'FontSize',16);
+        title(sprintf("%s Tip Error as a Function of Force",wrist.name),'FontSize',16);
         hold on
         for i = 1:numFiles
-            scatter(force_cell{1,i},tip_error{1,i,m},300,'rx');
+            scatter(force_cell{1,i},tip_error{1,i,m},300,'r.');
         end
         xlabel("Force (N)",'FontSize',14);
         ylabel("RMSE (m)",'FontSize',14)
