@@ -1,7 +1,8 @@
 %% Setup
 clc; clear; close all;
 load('PropertySets.mat')
-parameters = PropertySets(198,:);
+setnum = 202;
+parameters = PropertySets(setnum,:);
 wristTypes = {'150Tube','90Tube','TipFirstTube'};
 wristNames = {'A', 'B', 'C'};
 expFiles = ["\27-6-9_Trial1_Results.xlsx","\02-17-2021_Results.xlsx","\02-03-2021_Results.xlsx"];
@@ -10,13 +11,14 @@ markerSize = 500;
 Force = 2.5;
 
 c = distinguishable_colors(50);
+% c = c([1:5,7:end],:);
 %%
 for w = 1:3
     wristType = wristTypes{w};
     SaveDestination = sprintf("RA-L_Figures/%s",wristType);
     experimentFiles = expFiles(w);
     wrist = MakeWrist(wristType,true);
-    wrist.use_non_linear = false;
+    wrist.use_non_linear = true;
     
     
     %% Parse Experiment Files
@@ -67,7 +69,7 @@ for w = 1:3
 %                              for i = 1:numFiles
 %                                  scatter(force_cell{1,i},notch_cell{1,i}(:,p),30,c(p+5,:),'filled');
 %                              end
-            plot(F_vec,rad2deg(theta_mat_force(p,:)),'Color',c(p+5,:),'Linewidth',3);
+            plot(F_vec,rad2deg(theta_mat_force(p,:)),'Color',c(p+4,:),'Linewidth',3);
             xlabel("Force (N)",'FontSize',fontsize);
             ylabel("Deflection (deg)",'FontSize',fontsize)
             ax = gca;
@@ -90,8 +92,8 @@ for w = 1:3
     if ~exist(destdirectory, 'dir')
         mkdir(destdirectory);
     end
-    saveas(gcf,sprintf("%s/%s_%s.png",SaveDestination,wristType,experimentStr));
-    saveas(gcf,sprintf("%s/%s_%s.fig",SaveDestination,wristType,experimentStr));
-    saveas(gcf,sprintf("%s/%s_%s.svg",SaveDestination,wristType,experimentStr));
+    saveas(gcf,sprintf("%s/%s_%s_Set%d.png",SaveDestination,wristType,experimentStr,setnum));
+    saveas(gcf,sprintf("%s/%s_%s_Set%d.fig",SaveDestination,wristType,experimentStr,setnum));
+    saveas(gcf,sprintf("%s/%s_%s_Set%d.svg",SaveDestination,wristType,experimentStr,setnum));
 end
     

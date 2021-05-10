@@ -17,11 +17,13 @@ ybar = wrist.get_neutral_axis();
 p = zeros(3,2);
 
 points = 3;
-theta_max = deg2rad(60);
+theta_max = deg2rad(90);
 theta = zeros(n,points);
 theta(:,1) = theta_max/n*ones(n,1);
-theta(:,2) = [0.45*theta_max 0.25*theta_max 0.15*theta_max 0.1*theta_max 0.05*theta_max]';
-theta(:,3) = flip(theta(:,2));
+theta(:,2) = [0.27*theta_max 0.22*theta_max 0.19*theta_max 0.172*theta_max 0.148*theta_max]';
+theta(:,3) = [0.1,0.14,0.19,0.25,0.32].*theta_max;
+
+colors = [0 0.4470 0.7410; 0.8500 0.3250 0.0980; 0.9290 0.6940 0.1250];
 
 for j = 1:points
     if(sum(theta(:,j)) - theta_max > 1E-6)
@@ -42,14 +44,15 @@ for j = 1:points
     wrist.tau = 0;
     [~,T] = wrist.robot_kin();
     p(:,j) = T(1:3,4)*1000;
-    wrist.plot_stick_model();
-    xlabel('Position (m)');
-    zlabel('Position (m)');
-    xlim([0,15e-3]);
-    ylim([0,1e-3]);
-    zlim([0,15e-3]);
+    wrist.plot_stick_model('LineWidth',3,'Marker','none','Color',colors(j,:));
     hold on
 end
-legend('Equal Bending','Base First Bending','Tip First Bending');
+view(0,0)
+legend('Equal Bending','Base First Bending','Tip First Bending','FontSize',16,'FontName','CMU Serif','Location','southeast');
+title(sprintf('Tube position based on \ndistribution of wrist deflection'),'FontSize',20,'FontName','CMU Serif');
+ax = gca;
+ax.FontSize = 16;
+ax.FontName = 'CMU Serif';
+
 fprintf("Difference in tip positions: %f\n",norm(p(:,1)-p(:,2)))
 fprintf("Difference in tip positions: %f\n",norm(p(:,1)-p(:,3)))

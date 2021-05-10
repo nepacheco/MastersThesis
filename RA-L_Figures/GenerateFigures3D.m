@@ -1,7 +1,8 @@
 %% Setup
 clc; clear; close all;
 load('PropertySets.mat')
-parameters = PropertySets(198,:);
+setnum = 202;
+parameters = PropertySets(setnum,:);
 wristTypes = {'150Tube','90Tube','TipFirstTube'};
 wristNames = {'A', 'B', 'C'};
 expFiles = ["\27-6-9_Trial1_Results.xlsx","\02-17-2021_Results.xlsx","\02-03-2021_Results.xlsx"];
@@ -12,14 +13,14 @@ Force = 2.5;
 az = -32.7;
 el = 33.8;
 
-c = distinguishable_colors(50);
+c = distinguishable_colors(10);
 %%
 for w = 1 : 3
     wristType = wristTypes{w};
     SaveDestination = sprintf("RA-L_Figures/%s",wristType);
     experimentFiles = expFiles(w);
     wrist = MakeWrist(wristType,true);
-    wrist.use_non_linear = false;
+    wrist.use_non_linear = true;
     
     
     %% Parse Experiment Files
@@ -71,7 +72,7 @@ for w = 1 : 3
                 scatter3(p*ones(1,length(force_cell{1,i})),force_cell{1,i},notch_cell{1,i}(:,p),50,.2*ones(1,3),'filled');
                 hold on
             end
-            plot3(p*ones(1,length(F_vec)),F_vec,rad2deg(theta_mat_force(p,:)),'Color',c(p+5,:),'Linewidth',3);
+            plot3(p*ones(1,length(F_vec)),F_vec,rad2deg(theta_mat_force(p,:)),'Color',c(p+4,:),'Linewidth',3);
             hold on
             xlabel('Notch number')
             ylabel("Force (N)",'FontSize',fontsize);
@@ -124,8 +125,8 @@ for w = 1 : 3
         if ~exist(destdirectory, 'dir')
            mkdir(destdirectory);
         end
-    saveas(gcf,sprintf("%s/%s_3D%s.png",SaveDestination,wristType,experimentStr));
-    saveas(gcf,sprintf("%s/%s_3D%s.fig",SaveDestination,wristType,experimentStr));
-    saveas(gcf,sprintf("%s/%s_3D%s.svg",SaveDestination,wristType,experimentStr));
+    saveas(gcf,sprintf("%s/%s_3D%s_Set%d.png",SaveDestination,wristType,experimentStr,setnum));
+    saveas(gcf,sprintf("%s/%s_3D%s_Set%d.fig",SaveDestination,wristType,experimentStr,setnum));
+    saveas(gcf,sprintf("%s/%s_3D%s_Set%d.svg",SaveDestination,wristType,experimentStr,setnum));
     end
 end

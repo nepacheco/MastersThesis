@@ -390,7 +390,7 @@ classdef Wrist < handle
         function obj = plot_stick_model(obj,options)
             arguments
                 obj Wrist
-                options.Linewidth (1,1) double = 1.5
+                options.Linewidth (1,1) double = 2.5
                 options.Marker (1,:) char = '.'
                 options.MarkerSize (1,1) double = 25
                 options.Color (1,3) double = [0 0.4470 0.7410];

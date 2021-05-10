@@ -99,7 +99,7 @@ for m = 1:size(parameters,1)
             mkdir(destdirectory);
         end
         saveas(gcf,sprintf("%s/PropertySet%d/TipRMSE/%s_RMSEvForce_%s.png",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
-        saveas(gcf,sprintf("%s/PropertySet%d/TipRMSE/%s__RMSEvForce_%sfig",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
+        saveas(gcf,sprintf("%s/PropertySet%d/TipRMSE/%s_RMSEvForce_%s.fig",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
 
         writematrix(rmse_total(:,:,m),...
             sprintf("%s/PropertySet%d/TipRMSE/Tip_RMSE_Values_%s_%s.xlsx",SaveDestination,table2array(parameters(m,'ID')),wristType,experimentStr));
