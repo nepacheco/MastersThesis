@@ -39,7 +39,7 @@ for w = 1:3
     opts = detectImportOptions(file_name);
     opts.Sheet = 'AvgMeasurements';
     file = readcell(file_name,opts);
-    [force_vec,notch_mat] = ParseExperimentFile(file,n);
+    [force_vec,notch_mat,tendon_disp] = ParseExperimentFile(file,n);
     num_elem = 2;
     for i = 2:size(force_vec,1)
         if force_vec(i) < force_vec(i-1)
@@ -50,7 +50,6 @@ for w = 1:3
     c = distinguishable_colors(10);
     num_examples = 9;
     counter = 0;
-    legend_str = [];
     for i = num_elem:-ceil(num_elem/num_examples):1
         counter = counter + 1;
 %         fprintf("Notch Angles %f ", notch_mat(i,1:end-1))
@@ -69,9 +68,7 @@ for w = 1:3
         [~,T] = wrist.robot_kin();
         hold on
         wrist.plot_stick_model('Color',color);
-        view(0,0)
-        zlim([0,10])
-        xlim([0,7.5])
+
 
         %% Non Linear and Friction
         wrist.E_lin = parameters.E_lin;
@@ -88,10 +85,30 @@ for w = 1:3
         color = c(1,:);
         color = color + (ones(1,3)-color)/(num_examples*1.05)*(counter); % Lets me apply a gradient
         wrist.plot_stick_model('Marker','none','Color',color);
-        legend_string = [legend_str ""];
+
+        %% Geometry
+%         wrist.E_lin = parameters.E_lin;
+%         wrist.E_se = parameters.E_se;
+%         wrist.strain_lower = parameters.Strain_Lower;
+%         wrist.mu = parameters.Mu;
+% 
+%         wrist.use_friction = true;
+%         wrist.use_non_linear = true;
+% 
+%         [~,T3] = wrist.fwkin([tendon_disp(i)*1E-3,0,0],'Type','geometry');
+%         gca;
+%         hold on;
+%         color = c(5,:);
+%         color = color + (ones(1,3)-color)/(num_examples*1.05)*(counter); % Lets me apply a gradient
+%         wrist.plot_stick_model('Marker','none','Color',color);
+
     end
-    title(sprintf('Prediction of %s Bending',wrist.name),'FontSize',20,'FontName','CMU Serif');
-    legend('Experiment','Model','FontSize',16,'Location',legendlocation,'FontName','CMU Serif')
+    view(0,0)
+    zlim([0,10])
+    xlim([0,7.5])
+    set(gca, 'FontSize',16,'FontName','CMU Serif');
+    title(sprintf('%s Bending',wrist.name),'FontSize',20,'FontName','CMU Serif');
+    legend('Experiment','Our Model','FontSize',16,'Location',legendlocation,'FontName','CMU Serif')
     
     
     SaveDestination = "RA-L_Figures/TotalBend";

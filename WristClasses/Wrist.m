@@ -238,7 +238,7 @@ classdef Wrist < handle
             k = zeros(obj.n,1);
             s = zeros(obj.n,1);
             l = l/obj.n;
-            obj.get_neutral_axis();
+%             obj.get_neutral_axis();
             for i = 1:obj.n
                 k(i) = l/(obj.h(i)*(obj.ID/2 + obj.ybar(i)) - l*obj.ybar(i));
                 s(i) = obj.h(i)/(1 + obj.ybar(i)*k(i));
@@ -246,7 +246,7 @@ classdef Wrist < handle
             obj.kappa = k;
             obj.s = s;
             obj.theta = obj.kappa.*obj.s;
-            for(i = 1:obj.n)
+            for i = 1:obj.n
                 obj.check_notch_limits(i);
             end
         end
@@ -346,6 +346,8 @@ classdef Wrist < handle
             %what they should do based on geometry.
             if obj.theta(index) >= 0 && (obj.h(index)/(obj.OD/2 + obj.ybar(index)) <= obj.theta(index))
                 obj.theta(index) = obj.h(index)/(obj.OD/2 + obj.ybar(index));
+                obj.s(index) = obj.h(index) - (obj.ybar(index))*abs(obj.theta(index));  %[m]
+                obj.kappa(index) = obj.theta(index)/obj.s(index); % [1/m]
             end
         end
         

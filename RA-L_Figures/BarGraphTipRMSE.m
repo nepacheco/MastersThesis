@@ -15,9 +15,9 @@ wristTipFirst = MakeWrist('TipFirstTube',true);
 
 
 % Getting Data for FRICTION and NONLINEAR
-nonlin150_rmse = CompareTipModel(wrist150,experimentData150,PropertySets(202,:),'Plot',false);
-nonlin90_rmse = CompareTipModel(wrist90,experimentData90,PropertySets(202,:),'Plot',false);
-nonlinTip_rmse = CompareTipModel(wristTipFirst,experimentDataTipFirst,PropertySets(202,:),'Plot',false);
+nonlin150_rmse = CompareTipModel(wrist150,experimentData150,PropertySets(196,:),'Plot',false);
+nonlin90_rmse = CompareTipModel(wrist90,experimentData90,PropertySets(196,:),'Plot',false);
+nonlinTip_rmse = CompareTipModel(wristTipFirst,experimentDataTipFirst,PropertySets(196,:),'Plot',false);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Getting Data for FRICTION and LINEAR
@@ -46,20 +46,33 @@ nofTip_rmse = CompareTipModel(wristTipFirst,experimentDataTipFirst,PropertySets(
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Getting data for NO FRICTION and NONLINEAR
+% wrist90.use_non_linear = true;
+% wrist150.use_non_linear = true;
+% wristTipFirst.use_non_linear = true;
+% wrist90.use_friction = false;
+% wrist150.use_friction = false;
+% wristTipFirst.use_friction = false;
+% 
+% nofnonlin150_rmse = CompareTipModel(wrist150,experimentData150,PropertySets(201,:),'Plot',false);
+% nofnonlin90_rmse = CompareTipModel(wrist90experimentData90,PropertySets(201,:),'Plot',false);
+% nofnonlinTip_rmse = CompareTipModel(wristTipFirst,experimentDataTipFirst,PropertySets(201,:),'Plot',false);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Getting data for Geometry
 wrist90.use_non_linear = true;
 wrist150.use_non_linear = true;
 wristTipFirst.use_non_linear = true;
-wrist90.use_friction = false;
-wrist150.use_friction = false;
-wristTipFirst.use_friction = false;
+wrist90.use_friction = true;
+wrist150.use_friction = true;
+wristTipFirst.use_friction = true;
 
-nofnonlin150_rmse = CompareTipModel(wrist150,experimentData150,PropertySets(201,:),'Plot',false);
-nofnonlin90_rmse = CompareTipModel(wrist90,experimentData90,PropertySets(201,:),'Plot',false);
-nofnonlinTip_rmse = CompareTipModel(wristTipFirst,experimentDataTipFirst,PropertySets(201,:),'Plot',false);
+nofnonlin150_rmse = CompareTipModelGeom(wrist150,experimentFiles150(6),PropertySets(196,:),'Plot',false);
+nofnonlin90_rmse = CompareTipModelGeom(wrist90,experimentFiles90(2),PropertySets(196,:),'Plot',false);
+nofnonlinTip_rmse = CompareTipModelGeom(wristTipFirst,experimentFilesTip(3),PropertySets(196,:),'Plot',false);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Plotting
+%% Vertical Plotting
 x = categorical({'Wrist A' ,'Wrist B', 'Wrist C'});
 y = 1000*[nonlin150_rmse nof150_rmse lin150_rmse nofnonlin150_rmse ;nonlin90_rmse  nof90_rmse lin90_rmse nofnonlin90_rmse; nonlinTip_rmse  nofTip_rmse linTip_rmse nofnonlinTip_rmse];
 b = bar(x,y);
@@ -68,13 +81,28 @@ b = bar(x,y);
 b(1).FaceColor = c(1,:);
 b(2).FaceColor = c(3,:);
 b(3).FaceColor = c(2,:);
-b(4).FaceColor = c(4,:);
+% b(4).FaceColor = c(4,:);
+b(4).FaceColor = c(5,:);
 
+%% horizontal Plotting
+% x = categorical({'Wrist A' ,'Wrist B', 'Wrist C'});
+% y = 1000*[nonlin150_rmse nof150_rmse lin150_rmse nofnonlin150_rmse;...
+%     nonlin90_rmse  nof90_rmse lin90_rmse nofnonlin90_rmse;...
+%     nonlinTip_rmse  nofTip_rmse linTip_rmse nofnonlinTip_rmse];
+% b = barh(x,y);
+% 
+% 
+% b(1).FaceColor = c(1,:);
+% b(2).FaceColor = c(3,:);
+% b(3).FaceColor = c(2,:);
+% % b(4).FaceColor = c(4,:);
+% b(4).FaceColor = c(5,:);
 
-set(gca,'FontSize',12,'FontName','CMU Serif')
-ylabel('RMSE (mm)','FontName','CMU Serif','FontSize',14)
-title('Tip Tracking Accuracy','FontName','CMU Serif','FontSize',16)
-legend('Nonlinear with Friction', 'Linear without Friction', 'Linear with Friction', 'Nonlinear without Friction','FontName','CMU Serif','FontSize',14)
+%%
+set(gca,'FontSize',16,'FontName','CMU Serif')
+ylabel('RMSE (mm)','FontName','CMU Serif','FontSize',18)
+title('Tip Tracking Accuracy','FontName','CMU Serif','FontSize',20)
+legend('Our Model', 'Linear without Friction', 'Linear with Friction', 'York et al. Model','FontName','CMU Serif','FontSize',16)
 
 %% Calculate rmse of rmse
 
