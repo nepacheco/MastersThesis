@@ -66,21 +66,21 @@ wrist90.use_friction = true;
 wrist150.use_friction = true;
 wristTipFirst.use_friction = true;
 
-nofnonlin150_rmse = CompareTipModelGeom(wrist150,experimentFiles150(6),PropertySets(196,:),'Plot',false);
-nofnonlin90_rmse = CompareTipModelGeom(wrist90,experimentFiles90(2),PropertySets(196,:),'Plot',false);
-nofnonlinTip_rmse = CompareTipModelGeom(wristTipFirst,experimentFilesTip(3),PropertySets(196,:),'Plot',false);
+geom150_rmse = CompareTipModelGeom(wrist150,experimentFiles150(6),PropertySets(196,:),'Plot',true);
+geom90_rmse = CompareTipModelGeom(wrist90,experimentFiles90(2),PropertySets(196,:),'Plot',true);
+geomTip_rmse = CompareTipModelGeom(wristTipFirst,experimentFilesTip(3),PropertySets(196,:),'Plot',true);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Vertical Plotting
 x = categorical({'Wrist A' ,'Wrist B', 'Wrist C'});
-y = 1000*[nonlin150_rmse nof150_rmse lin150_rmse nofnonlin150_rmse ;nonlin90_rmse  nof90_rmse lin90_rmse nofnonlin90_rmse; nonlinTip_rmse  nofTip_rmse linTip_rmse nofnonlinTip_rmse];
+y = 1000*[nonlin150_rmse lin150_rmse nof150_rmse geom150_rmse ;nonlin90_rmse lin90_rmse nof90_rmse geom90_rmse; nonlinTip_rmse linTip_rmse  nofTip_rmse geomTip_rmse];
 b = bar(x,y);
 
 
 b(1).FaceColor = c(1,:);
-b(2).FaceColor = c(3,:);
-b(3).FaceColor = c(2,:);
+b(3).FaceColor = c(3,:);
+b(2).FaceColor = c(2,:);
 % b(4).FaceColor = c(4,:);
 b(4).FaceColor = c(5,:);
 
@@ -102,7 +102,7 @@ b(4).FaceColor = c(5,:);
 set(gca,'FontSize',16,'FontName','CMU Serif')
 ylabel('RMSE (mm)','FontName','CMU Serif','FontSize',18)
 title('Tip Tracking Accuracy','FontName','CMU Serif','FontSize',20)
-legend('Our Model', 'Linear without Friction', 'Linear with Friction', 'York et al. Model','FontName','CMU Serif','FontSize',16)
+legend('Our Model', 'Linear with Friction', 'Linear without Friction', 'Pure Kinematic','FontName','CMU Serif','FontSize',16)
 
 %% Calculate rmse of rmse
 
@@ -124,4 +124,8 @@ rmse_lin = sqrt(mean(error_veclin.^2));
 error_vecNoF = [nof150_rmse*ones(numInputs150,1); nof90_rmse*ones(numInputs90,1); nofTip_rmse*ones(numInputsTip,1)];
 rmse_NoF = sqrt(mean(error_vecNoF.^2));
 
-fprintf("%0.5f, %0.5f, %0.5f\n",rmse_NonLin,rmse_lin,rmse_NoF)
+% non linear rmse across tubes
+error_vecGeom = [geom150_rmse*ones(numInputs150,1); geom90_rmse*ones(numInputs90,1); geomTip_rmse*ones(numInputsTip,1)];
+rmse_Geom = sqrt(mean(error_vecGeom.^2));
+
+fprintf("Our Model: %0.5f, Linear with Friction: %0.5f, Linear without Friction: %0.5f, Geometric: %0.5f\n",rmse_NonLin*1E3,rmse_lin*1E3,rmse_NoF*1E3,rmse_Geom*1E3)

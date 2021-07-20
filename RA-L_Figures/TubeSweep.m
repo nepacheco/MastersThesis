@@ -71,22 +71,6 @@ for w = 1:3
 
 
         %% Non Linear and Friction
-        wrist.E_lin = parameters.E_lin;
-        wrist.E_se = parameters.E_se;
-        wrist.strain_lower = parameters.Strain_Lower;
-        wrist.mu = parameters.Mu;
-
-        wrist.use_friction = true;
-        wrist.use_non_linear = true;
-
-        [~,T3] = wrist.fwkin([force_vec(i),0,0]);
-        gca;
-        hold on;
-        color = c(1,:);
-        color = color + (ones(1,3)-color)/(num_examples*1.05)*(counter); % Lets me apply a gradient
-        wrist.plot_stick_model('Marker','none','Color',color);
-
-        %% Geometry
 %         wrist.E_lin = parameters.E_lin;
 %         wrist.E_se = parameters.E_se;
 %         wrist.strain_lower = parameters.Strain_Lower;
@@ -95,12 +79,28 @@ for w = 1:3
 %         wrist.use_friction = true;
 %         wrist.use_non_linear = true;
 % 
-%         [~,T3] = wrist.fwkin([tendon_disp(i)*1E-3,0,0],'Type','geometry');
+%         [~,T3] = wrist.fwkin([force_vec(i),0,0]);
 %         gca;
 %         hold on;
-%         color = c(5,:);
+%         color = c(1,:);
 %         color = color + (ones(1,3)-color)/(num_examples*1.05)*(counter); % Lets me apply a gradient
 %         wrist.plot_stick_model('Marker','none','Color',color);
+
+        %% Geometry
+        wrist.E_lin = parameters.E_lin;
+        wrist.E_se = parameters.E_se;
+        wrist.strain_lower = parameters.Strain_Lower;
+        wrist.mu = parameters.Mu;
+
+        wrist.use_friction = true;
+        wrist.use_non_linear = true;
+
+        [~,T3] = wrist.fwkin([tendon_disp(i)*1E-3,0,0],'Type','geometry');
+        gca;
+        hold on;
+        color = c(5,:);
+        color = color + (ones(1,3)-color)/(num_examples*1.15)*(counter); % Lets me apply a gradient
+        wrist.plot_stick_model('Marker','none','Color',color);
 
     end
     view(0,0)
@@ -108,10 +108,10 @@ for w = 1:3
     xlim([0,7.5])
     set(gca, 'FontSize',16,'FontName','CMU Serif');
     title(sprintf('%s Bending',wrist.name),'FontSize',20,'FontName','CMU Serif');
-    legend('Experiment','Our Model','FontSize',16,'Location',legendlocation,'FontName','CMU Serif')
+    legend('Experiment','York et al.','FontSize',16,'Location',legendlocation,'FontName','CMU Serif')
     
     
-    SaveDestination = "RA-L_Figures/TotalBend";
+    SaveDestination = "RA-L_Figures/TotalBend/Geometry";
     destdirectory = sprintf("%s/",SaveDestination);
     if ~exist(destdirectory, 'dir')
         mkdir(destdirectory);
