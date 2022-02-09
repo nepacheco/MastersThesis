@@ -14,6 +14,7 @@ end
 numFiles = size(experimentFiles,1);
 force_cell = cell(1,numFiles);
 notch_cell = cell(1,numFiles);
+tendon_cell = cell(1,numFiles);
 experimentStr = "";
 average = zeros(n+1,numFiles);
 for i = 1:numFiles
@@ -24,16 +25,20 @@ for i = 1:numFiles
     opts = detectImportOptions(experimentFiles(i));
     opts.Sheet = options.Sheet;
     file = readcell(experimentFiles(i),opts);
-    [force_vec, notch_data] = ParseExperimentFile(file,n,...
+    [force_vec, notch_data, tendon_data] = ParseExperimentFile(file,n,...
         'force_index', options.force_index,'tendon_index',...
         options.tendon_index, 'notch1_index', options.notch1_index);
     
     force_cell(1,i) = {force_vec};
     notch_cell(1,i) = {notch_data};
+    tendon_cell(1,i) = {tendon_data};
     average(:,i) = mean(notch_data)';
 end
 
-experimentData = [force_cell, notch_cell,average,convertStringsToChars(experimentStr),numFiles];
+experimentData = struct('force_data',{force_cell},...
+    'notch_data',{notch_cell},'notch_averages',{average},...
+    'tendon_data',{tendon_cell},...
+    'experiment_str',convertStringsToChars(experimentStr),'num_files',numFiles);
 
 end
 

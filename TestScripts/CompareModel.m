@@ -6,18 +6,18 @@ function [rmse_total, r2_total] = CompareModel(wrist,experimentData,parameters,S
 %   experiment excel file
 arguments
     wrist Wrist
-    experimentData (1,:) cell
+    experimentData (1,1) struct
     parameters table
     SaveDestination string = "ComparisonImages/PropertySets"
     options.Force (1,1) double = 3;
     options.Plot logical = true;
     options.numFiles = 1;
 end
-numFiles = experimentData{1,end};
-force_cell = experimentData(1,1:numFiles);
-notch_cell = experimentData(1,numFiles+1:numFiles*2);
-experimentStr = convertCharsToStrings(experimentData{1,end-1});
-expAverage = experimentData{1,end-2};
+numFiles = experimentData.num_files;
+force_cell = experimentData.force_data;
+notch_cell = experimentData.notch_data;
+experimentStr = convertCharsToStrings(experimentData.experiment_str);
+expAverage = experimentData.notch_averages;
 
 %% Calculating RMSE and Plotting is done for each set of material properties
 rmse_total = zeros(wrist.n+1,numFiles,size(parameters,1));
