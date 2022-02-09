@@ -50,9 +50,9 @@ if ~singleFile
     force_vec = zeros(numOfFiles-startIndex + 1, 1);
     for i = startIndex:numOfFiles
         % For loop through the files in the directory and analyze each file
-        file = readmatrix(path+filesInDir(i).name);
 %         disp(path+filesInDir(i).name);
         try
+            file = readmatrix(path+filesInDir(i).name);
             % This is in case someone decides the are done analyzing images but
             % doesn't want to lose their progress.
             force = mean(file(1:end,12));
