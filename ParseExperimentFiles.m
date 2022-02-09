@@ -1,8 +1,13 @@
-function experimentData = ParseExperimentFiles(experimentFiles,n)
-%ParseExperimentFile - parses the NxM cell passed into a force vector and notch value
-%matrix
-%   force vector output is Nx1 and notch_mat is Nxn where n is the number
-%   of notches in the tube.
+function experimentData = ParseExperimentFiles(experimentFiles,n,options)
+%ParseExperimentFiles - takes in a list of paths to experiment files and
+%parses all of them into a single cell array
+arguments
+    experimentFiles
+    n = 5 % number of notches
+    options.force_index = 4 % the force index
+    options.tendon_index = 3 
+    options.notch1_index = 5
+end
 
 % Parse Experiment Files
 numFiles = size(experimentFiles,1);
@@ -18,7 +23,9 @@ for i = 1:numFiles
     opts = detectImportOptions(experimentFiles(i));
     opts.Sheet = 'AvgMeasurements';
     file = readcell(experimentFiles(i),opts);
-    [force_vec, notch_data] = ParseExperimentFile(file,n);
+    [force_vec, notch_data] = ParseExperimentFile(file,n,...
+        'force_index', options.force_index,'tendon_index',...
+        options.tendon_index, 'notch1_index', options.notch1_index);
     
     force_cell(1,i) = {force_vec};
     notch_cell(1,i) = {notch_data};
