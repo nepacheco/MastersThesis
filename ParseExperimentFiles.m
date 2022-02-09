@@ -7,6 +7,7 @@ arguments
     options.force_index = 4 % the force index
     options.tendon_index = 3 
     options.notch1_index = 5
+    options.Sheet = 'AvgMeasurements'
 end
 
 % Parse Experiment Files
@@ -21,7 +22,7 @@ for i = 1:numFiles
     period_indicies = strfind(experimentFiles(i),".");
     experimentStr = experimentStr + extractBetween(experimentFiles(i),backslash_indicies(end)+1,period_indicies(end)-1);
     opts = detectImportOptions(experimentFiles(i));
-    opts.Sheet = 'AvgMeasurements';
+    opts.Sheet = options.Sheet;
     file = readcell(experimentFiles(i),opts);
     [force_vec, notch_data] = ParseExperimentFile(file,n,...
         'force_index', options.force_index,'tendon_index',...
