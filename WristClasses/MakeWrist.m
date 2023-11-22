@@ -2,7 +2,7 @@ function wrist = MakeWrist(wristType,precurvature)
 %MAKEWRIST Creates the specified wrist
 %   Based on the input string creates the wrist with the desired parameters
 arguments
-    wristType char {mustBeMember(wristType,{'90Tube','150Tube','150Tube2','TipFirstTube'})} 
+    wristType char {mustBeMember(wristType,{'90Tube','150Tube','150Tube2','TipFirstTube','AlexWrist'})} 
     precurvature logical = false
 end
 switch (wristType)
@@ -50,6 +50,15 @@ switch (wristType)
         g = [1.36,1.39,1.42,1.45].*1E-3;
         % tip first bending 01-12-20201 Experiment
         precurve_values = deg2rad([2.191;2.264;2.534;3.062]);
+    case 'AlexWrist'
+        name = 'AlexWrist';
+        od = 1.1E-3;
+        id = 0.9E-3;
+        n = 10;
+        h = 0.1901E-3*ones(n,1);
+        phi = zeros(n,1);
+        c = 1.3099E-3*ones(n,1);
+        g = 0.935E-3*ones(n,1);
 end
 wrist = Wrist(od,id,n,h,phi,c,g,'CutType','on-axis','Name',name);
 if precurvature
