@@ -7,9 +7,9 @@ arguments
     h (1,1) double  % [m] notch height
     ro (1,1) double  % [m] outer radius of tube
     ybar (1,1) double  % [m] neutral bending plane of tube
-    opts.E_lin (1,1) double  % [Pa] Linear Elastic Modulus
-    opts.E_se (1,1) double  % [Pa]  Super elastic modulus
-    opts.strainLower (1,1) double  % lower strain threshold
+    opts.E_lin (1,1) double = 10e9 % [Pa] Linear Elastic Modulus
+    opts.E_se (1,1) double  = 3e9% [Pa]  Super elastic modulus
+    opts.strainLower (1,1) double = 0.028 % lower strain threshold
 end
 
 kappa = theta/(h-theta*ybar);
