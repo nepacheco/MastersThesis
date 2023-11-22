@@ -15,7 +15,7 @@ end
 kappa = theta/(h-theta*ybar);
 y = max([ro-ybar]);
 strain = abs(kappa*y/(1 + ybar*kappa));
-stress = GetStress(strain, opts.E_lin, opts.E_se, 'strain_lower', opts.strainLower);
+stress = GetStress(strain, opts.E_lin, opts.E_se, 'strainLower', opts.strainLower);
 if (strain > 0)
     E = stress/strain; % Assume we are in linear elastic range
 else
