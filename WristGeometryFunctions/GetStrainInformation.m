@@ -3,7 +3,7 @@ function [strain, stress, E] = GetStrainInformation(theta, h, ro, ybar,opts)
 % GETSTRAININFORMATION - returns the stress, strain, and effective youngs
 % modulus for a notch
 arguments
-    theta (1,1) double  % bending angle of notch
+    theta (1,1) double  % [rad] bending angle of notch
     h (1,1) double  % [m] notch height
     ro (1,1) double  % [m] outer radius of tube
     ybar (1,1) double  % [m] neutral bending plane of tube
