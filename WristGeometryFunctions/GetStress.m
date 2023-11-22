@@ -5,12 +5,12 @@ arguments
     strain (1,1) double  % approximate strain experienced by notch
     E_lin  (1,1) double  % the estimated linear elastic modulus of the material
     E_se   (1,1) double  % The estimated super elastic modulus of the material
-    opts.strain_lower  (1,1) double = 0.028  % The strain threshold where material becomes super elastic
-    opts.strain_upper (1,1) double = 0.1  % the strain threshold where material becomes plastic. 
+    opts.strainLower  (1,1) double = 0.028  % The strain threshold where material becomes super elastic
+    opts.strainUpper (1,1) double = 0.1  % the strain threshold where material becomes plastic. 
 end
 
-strain_lower = opts.strain_lower;
-strain_upper = opts.strain_upper;
+strain_lower = opts.strainLower;
+strain_upper = opts.strainUpper;
 
 sigma = @(e) (e<strain_lower).*e*E_lin+...
     (e >= strain_lower && e < strain_upper)*((e-strain_lower)*E_se+strain_lower*E_lin)+...
