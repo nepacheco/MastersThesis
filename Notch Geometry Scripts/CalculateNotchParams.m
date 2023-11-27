@@ -9,8 +9,8 @@ maxBendPerNotch = totalWristBend*2/(n*(n+1)).*(1:n); % [rad] - maximum bending a
 % Desired theta setpoint for each notch.
 % This creates a distance during tendon displacement where the notches in
 % the wrist will take on these values. 
-% theta_des = maxBendPerNotch/2;  % [rad] - Uniform Bending
-theta_des = maxBendPerNotch; % [rad] - close together (tip first)
+theta_des = maxBendPerNotch/2;  % [rad] - Uniform Bending
+% theta_des = maxBendPerNotch; % [rad] - close together (tip first)
 
 wristLength = 10e-3; %[m] Length of wrist excluding any base.
 od = 1.1E-3; % [m] - outer diameter of tube
@@ -20,7 +20,7 @@ maxG =  0.875*od; % [m] - Max depth which we assign to notch n.
 cutType = 'on-axis';
 [~,h,u] = GetNotchSynthesis(maxBendPerNotch,maxG,od,id,'CutType',cutType,...
     'L',wristLength);
-maxForce = 5.5; %[N] for plotting
+maxForce = 2; %[N] for plotting
 
 % Based on Pacheco et al. JMRR. 2021.
 E_lin = 10E9; % [N/m^2] - Elastic Modulus of Nitinol
@@ -99,69 +99,50 @@ sheath.strain_lower = strain_lower;
 
 
 % **** PLOTTING NOTCH ANGLE WRT FORCE **********
-% sheath.FindMaxForce(1,5);
-des_points = zeros(n,2);
-theta_last = zeros(n,1);
-points = 200; % how many points to plot
-theta_mat = zeros(n,points); % Initializing empty array to store values
-F = linspace(0,maxForce,points); % Getting list of forces (x axis values)
-for i = 1:points
-%     sheath.GetKinematicsForce(F(i)); % Updating tube position
-    sheath.fwkin([F(i);0;0]);
-    theta_mat(:,i) = sheath.theta; % Getting tube position
-    
-    % *** DATA COLLECTION TO SEE IF WE CROSSED DESIRED ANGLE VALUE ***
-    diff = (theta_last-theta_des') .* (sheath.theta-theta_des'); 
-    for k = 1:n % check each notch individually
-        if diff(k) <= 0% We have crosed over the desired angle
-            % Grab the point that was closest to the desired angle
-            if abs(theta_last(k)-theta_des(k)) < abs(sheath.theta(k) - theta_des(k))
-                des_points(k,1) = F(i-1);
-                des_points(k,2) = rad2deg(theta_last(k));
-            else
-                des_points(k,1) = F(i);
-                des_points(k,2) = rad2deg(sheath.theta(k));
-            end
-        end
-    end
-    theta_last = sheath.theta;
-    % ****************************************************************
-end
-theta_mat = theta_mat.*(180/pi); % Convert to deg
-close all;
-figure();
-plot(F,theta_mat,'LineWidth',2);
-title(sprintf("Notch angles with respect to force applied at tendon\ndesigned to close at the same time"),'FontSize',16)
-xlabel("Force (N)",'FontSize',14)
-ylabel("Angle (deg)",'FontSize',14)
+
+points = 1000; % how many points to plot
+sheath.plot_notch_angles(maxForce,points);
 % *** LABELING OUR DESIRED POINTS ***
 labels = cell(n,1);
-legendLabels = cell(n,1);
 for i = 1:n
     labels(i) = cellstr(...
         sprintf("Angle: %.1f",theta_des(i)*180/pi));
-    % Creating Legend Labels as well
-    legendLabels(i) = cellstr(...
-        sprintf("theta %u",i));
 end
 hold on
 % Plot our desired force and the desired theta for each wrist
-stem(Fdesired.*ones(1,n),theta_des.*180/pi,'ok','MarkerSize',10)
-% Plot the locations where our wrist actually hit the desired theta.
-stem(des_points(:,1),des_points(:,2),'.r','MarkerSize',10);
-text(Fdesired.*ones(1,n)-0.01,theta_des.*180/pi,labels,'VerticalAlignment','bottom',...
+stem(Fdesired.*ones(1,n),theta_des.*180/pi,'ok','MarkerSize',10,'DisplayName','Desired Target')
+% Plot the locations of our wrist at our desired force.
+sheath.fwkin([Fdesired;0;0]);
+stem(Fdesired.*ones(1,n),sheath.theta.*180/pi,'.r','MarkerSize',10,'DisplayName','Actual Wrist Position');
+text(Fdesired.*ones(1,n)-0.01,theta_des.*180/pi,labels,'VerticalAlignment','top',...
     'HorizontalAlignment','right');
 hold off
-legend(legendLabels,'Location','northwest','FontSize',12);
+
+% *** Plotting stick model *** 
+% Wrist Setpoint
+sheath.fwkin([Fdesired;0;0]);
+figure(2);
+sheath.plot_stick_model();
+title("Wrist Target");
+
+% Wrist Closure
+sheath.fwkin([maxForce;0;0]);
+figure(3);
+sheath.plot_stick_model();
+title("Wrist Closed")
+
+% Change plot order
+figure(2);
+figure(1);
 
 % *** MEASURING THETA DIFFERENCE ***
 % Commented out because it messes with previous plot
 % Apply our desired force to the wrist tendon
- sheath.fwkin([Fdesired;0;0]);
+sheath.fwkin([Fdesired;0;0]);
 
 % Print out percentage error for each notch
 percentage_error = 100*(theta_des' - sheath.theta)./(theta_des');
-s = sprintf("");
+s = sprintf("\n");
 for i = 1:n
     s = s + sprintf("Error for notch %u: %0.2f %%\n",i,percentage_error(i));
 end
