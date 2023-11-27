@@ -4,7 +4,7 @@ function [w,h,u] = GetNotchSynthesis(maxBendingAngle,w,OD,ID,opts)
 %   per angle based on the cut depth, outer diameter, and inner diameter of
 %   the tube. Based on Alex's notchsynthesis.m script
 arguments
-    maxBendingAngle (:,1) double  %[deg] the maximum bending angle for the notch
+    maxBendingAngle (:,1) double  % [rad] the maximum bending angle for the notch
     w (1,1) double  %[m] The assumed cut depth of each notch
     OD (1,1) double  %[m] outer diameter of the tube in meters
     ID (1,1) double  %[m] Inner diameter of the tube in meters
@@ -18,7 +18,7 @@ end
 % Define the total notch + uncut section length:
 L = opts.L; %[m]
 % Define the desired maximum bending angle for the wrist
-thetaMax = maxBendingAngle.* pi / 180; % [radians]
+thetaMax = maxBendingAngle; % [radians]
 %% You should not need to change anything from the code below
 
 
