@@ -1,21 +1,26 @@
 %% Initial Conditions
 clc; clear; close all;
+
+n = 5; % number of notches
+totalWristBend = 90*pi/180; % [rad] - total wrist deflection
+maxBendPerNotch = totalWristBend*2/(n*(n+1)).*(1:n); % [rad] - maximum bending angle per notch. Tip Dominant
+% maxBendPerNotch = totalWristBend./(n*ones(1,n));  % [rad] - maximum bending angle per notch. Constant Curvature
+
 % Desired theta setpoint for each notch.
 % This creates a distance during tendon displacement where the notches in
 % the wrist will take on these values. 
-theta_des = [10 15 20 25 30].*pi/180;  %[rad]
+% theta_des = maxBendPerNotch/2;  % [rad] - Uniform Bending
+theta_des = maxBendPerNotch; % [rad] - close together (tip first)
 
-n = 5; % number of notches
-wristLength = 15e-3; %[m] Length of wrist.
-maxBendPerNotch = [10 15 20 25 30]; % [deg] - maximum bending angle per notch
-od = 1.62E-3; % [m] - outer diameter of tube
-id = 1.4E-3; % [m] - inner diameter of tube
+wristLength = 10e-3; %[m] Length of wrist excluding any base.
+od = 1.1E-3; % [m] - outer diameter of tube
+id = 0.9E-3; % [m] - inner diameter of tube
 phi = zeros(n,1);
-maxG = 0.8642*od; % [m] - Max depth which we assign to notch n.
-cutType = 'off-axis';
+maxG =  0.875*od; % [m] - Max depth which we assign to notch n.
+cutType = 'on-axis';
 [~,h,u] = GetNotchSynthesis(maxBendPerNotch,maxG,od,id,'CutType',cutType,...
     'L',wristLength);
-maxForce = 1.75; %[N]
+maxForce = 5.5; %[N] for plotting
 
 % Based on Pacheco et al. JMRR. 2021.
 E_lin = 10E9; % [N/m^2] - Elastic Modulus of Nitinol
@@ -29,7 +34,7 @@ strain_lower = 0.028;
 % strain_lower = 0.02;
 
 
-%% Tip First Bending but incorporating different elastic modulus per notch
+%% Gradient Descent to determine the cut depth per notch
 
 % Get the resulting ybar and I from our chosen cut depth
 [maxYbar, minI] = GetNeutralAxis(od/2, id/2, maxG,'CutType',cutType);
@@ -82,9 +87,8 @@ for i = 1:n
     end
     g_vec(i) = g;
 end
-g_vec
 
-% *** TESTING THE ABOVE RESULTS ***
+%% *** TESTING THE ABOVE RESULTS ***
 
 % Create instance of wrist object
 sheath = Wrist(od,id,n,h,phi,u,g_vec,'CutType',cutType,'Name','TestWrist');
@@ -129,11 +133,11 @@ figure();
 plot(F,theta_mat,'LineWidth',2);
 title(sprintf("Notch angles with respect to force applied at tendon\ndesigned to close at the same time"),'FontSize',16)
 xlabel("Force (N)",'FontSize',14)
-ylabel("Angle (rad)",'FontSize',14)
+ylabel("Angle (deg)",'FontSize',14)
 % *** LABELING OUR DESIRED POINTS ***
-labels = {};
-legendLables = {};
-for (i = 1:n)
+labels = cell(n,1);
+legendLabels = cell(n,1);
+for i = 1:n
     labels(i) = cellstr(...
         sprintf("Angle: %.1f",theta_des(i)*180/pi));
     % Creating Legend Labels as well
@@ -150,19 +154,19 @@ text(Fdesired.*ones(1,n)-0.01,theta_des.*180/pi,labels,'VerticalAlignment','bott
 hold off
 legend(legendLabels,'Location','northwest','FontSize',12);
 
-% % *** MEASURING THETA DIFFERENCE ***
-% % Commented out because it messes with previous plot
-% % Apply our desired force to the wrist tendon
-% sheath.GetKinematicsForce(Fdesired);
-% 
-% % Print out percentage error for each notch
-% percentage_error = sheath.theta./(theta_des');
-% s = sprintf("");
-% for i = 1:n
-%     s = s + sprintf("Percentage error for notch %u, %f\n",i,percentage_error(i));
-% end
-% disp(s)
+% *** MEASURING THETA DIFFERENCE ***
+% Commented out because it messes with previous plot
+% Apply our desired force to the wrist tendon
+ sheath.fwkin([Fdesired;0;0]);
 
-disp(['Notch Width (w): ' num2str(g_vec) ' m']);
-disp(['Notch Height (h) : ' num2str(h') ' m']);
-disp(['Notch Height (u) : ' num2str(u') ' m']);
+% Print out percentage error for each notch
+percentage_error = 100*(theta_des' - sheath.theta)./(theta_des');
+s = sprintf("");
+for i = 1:n
+    s = s + sprintf("Error for notch %u: %0.2f %%\n",i,percentage_error(i));
+end
+disp(s)
+
+disp(['Notch Width (w): ' num2str(g_vec*1e3) ' mm']);
+disp(['Notch Height (h) : ' num2str(h'*1e3) ' mm']);
+disp(['Notch Height (u) : ' num2str(u'*1e3) ' mm']);
