@@ -396,6 +396,7 @@ classdef Wrist < handle
                 options.Marker (1,:) char = '.'
                 options.MarkerSize (1,1) double = 25
                 options.Color (1,3) double = [0 0.4470 0.7410];
+                options.view (1,2) double = [-37.5000 30];
             end
             x_vec = [];
             y_vec = [];
@@ -417,6 +418,7 @@ classdef Wrist < handle
             %             ylim([min(y_vec),max(y_vec)+eps])
             %             zlim([min(z_vec),max(z_vec)+eps])
             grid on;
+            view(options.view);
         end
         
         function p = plot_notch_angles(obj,F_max,points)

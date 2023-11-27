@@ -100,7 +100,7 @@ sheath.strain_lower = strain_lower;
 
 % **** PLOTTING NOTCH ANGLE WRT FORCE **********
 
-points = 1000; % how many points to plot
+points = 200; % how many points to plot
 sheath.plot_notch_angles(maxForce,points);
 % *** LABELING OUR DESIRED POINTS ***
 labels = cell(n,1);
@@ -122,13 +122,13 @@ hold off
 % Wrist Setpoint
 sheath.fwkin([Fdesired;0;0]);
 figure(2);
-sheath.plot_stick_model();
+sheath.plot_stick_model('view',[0 0]);
 title("Wrist Target");
 
 % Wrist Closure
 sheath.fwkin([maxForce;0;0]);
 figure(3);
-sheath.plot_stick_model();
+sheath.plot_stick_model('view',[0 0]);
 title("Wrist Closed")
 
 % Change plot order
